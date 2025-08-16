@@ -32,10 +32,8 @@ def process_data(raw_data, template):
     return processed
 
 def find_card_and_customer(state, template, data):
-    """Finds the card object and its parent customer ID."""
     lookup_key = template.get("lookup_key")
     lookup_value = data.get(lookup_key)
-    
     if template.get("provider_type") == "bank":
         application_id = data.get("application_id")
         customer_doc = state.get(lookup_value, {})
@@ -43,7 +41,6 @@ def find_card_and_customer(state, template, data):
             if card.get("tracking_ids", {}).get("application_id") == application_id:
                 return card, lookup_value
         return None, lookup_value
-
     for cid, cust_doc in state.items():
         for card in cust_doc.get("cards", []):
             if card.get("tracking_ids", {}).get(lookup_key) == lookup_value:
@@ -56,7 +53,7 @@ def update_local_state(current_state, data, template):
         print("-> No valid status event found in input. Skipping update.")
         return current_state
 
-    card_to_update, customer_id = find_card_and_customer(current_state, template, data)
+    card_to_update, _ = find_card_and_customer(current_state, template, data)
     new_status = data.get("status")
 
     if not card_to_update and template.get("provider_type") == "bank":
@@ -71,21 +68,24 @@ def update_local_state(current_state, data, template):
         }
         current_state[customer_id]["cards"].append(card_to_update)
         print(f"-> Creating new card record for application: {data.get('application_id')}")
-
+    
     if not card_to_update:
         print(f"❌ Error: Could not find a matching card record to update.")
         return current_state
 
-    all_events = [event for stage_events in card_to_update["timeline"].values() for event in stage_events]
-    if all_events:
-        last_event_timestamp = max(event.get("timestamp", "") for event in all_events)
-        if timeline_event.get("timestamp", "") <= last_event_timestamp:
-            print(f"-> Ignoring old event '{new_status}'.")
+    # --- **THE NEW, STAGE-SPECIFIC TIMESTAMP VALIDATION** ---
+    stage = timeline_event['stage']
+    timeline_for_stage = card_to_update["timeline"].setdefault(stage, [])
+    
+    if timeline_for_stage:
+        last_event_in_stage = timeline_for_stage[-1]
+        if timeline_event.get("timestamp", "") <= last_event_in_stage.get("timestamp", ""):
+            print(f"-> Ignoring old event '{new_status}' (Timestamp is not newer than last event in '{stage}' stage)")
             return current_state
 
+    # If the event is valid, perform all updates
     print(f"-> Applying new event: {new_status}")
-    stage = timeline_event['stage']
-    card_to_update["timeline"].setdefault(stage, []).append(timeline_event)
+    timeline_for_stage.append(timeline_event)
     card_to_update["current_status"] = {"stage": new_status, "location": data.get("current_location"), "last_updated": timeline_event.get("timestamp")}
 
     if template.get("provider_type") == "card_manufacturer":
