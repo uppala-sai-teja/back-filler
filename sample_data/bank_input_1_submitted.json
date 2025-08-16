@@ -1,5 +1,8 @@
 {
-  "application_id": "APP_HDFC_123456", "customer_id": "CUST_789012",
-  "customer_name": "John Doe", "mobile": "+919876543210",
-  "status": "submitted", "application_date": "2025-08-15T09:30:00Z"
+  "application_id": "APP_HDFC_123456",
+  "customer_id": "CUST_789012",
+  "customer_name": "John Doe",
+  "mobile": "+919876543210",
+  "status": "submitted",
+  "application_date": "2025-08-15T09:30:00Z"
 }

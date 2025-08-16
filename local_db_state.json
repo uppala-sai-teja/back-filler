@@ -1,0 +1,35 @@
+{
+  "CUST_789012": {
+    "_id": "CUST_789012",
+    "customer_info": {
+      "name": "John Doe",
+      "mobile": "+919876543210"
+    },
+    "cards": [
+      {
+        "tracking_ids": {
+          "application_id": "APP_HDFC_123456"
+        },
+        "card_info": {
+          "bank_name": "HDFC Bank"
+        },
+        "current_status": {
+          "stage": "APPLICATION_SUBMITTED",
+          "last_updated": "2025-08-15T09:30:00Z"
+        },
+        "timeline": {
+          "application_and_approval": [
+            {
+              "status": "APPLICATION_SUBMITTED",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-15T09:30:00Z",
+              "description": "Status updated to APPLICATION_SUBMITTED"
+            }
+          ],
+          "card_production": [],
+          "shipping_and_delivery": []
+        }
+      }
+    ]
+  }
+}
