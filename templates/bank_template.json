@@ -7,8 +7,14 @@
     "approved": { "status": "APPLICATION_APPROVED", "stage": "application_and_approval" }
   },
   "field_mappings": {
-    "application_id": "application_id", "customer_id": "customer_id",
-    "customer_name": "customer_name", "mobile": "mobile", "status": "status",
-    "application_date": "application_date", "approval_date": "approval_date"
+    "application_id": "application_id",
+    "customer_id": "customer_id",
+    "customer_name": "customer_name",
+    "mobile": "mobile",
+    "card_type": "card_type",
+    "card_variant": "card_variant",
+    "status": "status",
+    "application_date": "application_date",
+    "approval_date": "approval_date"
   }
 }

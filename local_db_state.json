@@ -11,7 +11,9 @@
           "application_id": "APP_HDFC_123456"
         },
         "card_info": {
-          "bank_name": "HDFC Bank"
+          "bank_name": "HDFC Bank",
+          "card_type": "Credit Card",
+          "card_variant": "Platinum"
         },
         "current_status": {
           "stage": "APPLICATION_SUBMITTED",
