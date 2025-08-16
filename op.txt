@@ -1,19 +1,20 @@
-[
-/*Processing file: sample_data/bank_input_1_submitted.json
+Processing file: sample_data/bank_input_1_submitted.json
+-> Creating new card record for application: APP_HDFC_123456
 ✅ Local state updated successfully.
 
---- FINAL DISPLAY OUTPUT FOR CUSTOMER: CUST_789012 ---*/
+--- CURRENT STATE FOR CUSTOMER: CUST_789012 ---
 {
-  "customer_id": "CUST_789012",
+  "_id": "CUST_789012",
   "customer_info": {
     "name": "John Doe",
     "mobile": "+919876543210"
   },
-  "in_tracking": [
+  "cards": [
     {
       "tracking_ids": {
         "application_id": "APP_HDFC_123456"
       },
+      "tracking_status": "active",
       "card_info": {
         "bank_name": "HDFC Bank",
         "card_type": "Credit Card",
@@ -30,37 +31,31 @@
             "stage": "application_and_approval",
             "timestamp": "2025-08-15T09:30:00Z",
             "description": "Status updated to APPLICATION_SUBMITTED"
-          },
-          {
-            "status": "APPLICATION_SUBMITTED",
-            "stage": "application_and_approval",
-            "timestamp": "2025-08-15T09:30:00Z",
-            "description": "Status updated to APPLICATION_SUBMITTED"
           }
         ],
         "card_production": [],
         "shipping_and_delivery": []
       }
     }
-  ],
-  "done_tracking": []
+  ]
 }
 
 Processing file: sample_data/bank_input_2_approved.json
 ✅ Local state updated successfully.
 
---- FINAL DISPLAY OUTPUT FOR CUSTOMER: CUST_789012 ---
+--- CURRENT STATE FOR CUSTOMER: CUST_789012 ---
 {
-  "customer_id": "CUST_789012",
+  "_id": "CUST_789012",
   "customer_info": {
     "name": "John Doe",
     "mobile": "+919876543210"
   },
-  "in_tracking": [
+  "cards": [
     {
       "tracking_ids": {
         "application_id": "APP_HDFC_123456"
       },
+      "tracking_status": "active",
       "card_info": {
         "bank_name": "HDFC Bank",
         "card_type": "Credit Card",
@@ -68,16 +63,10 @@ Processing file: sample_data/bank_input_2_approved.json
       },
       "current_status": {
         "stage": "APPLICATION_APPROVED",
-        "last_updated": "2025-08-15T09:30:00Z"
+        "last_updated": "2025-08-15T14:30:00Z"
       },
       "timeline": {
         "application_and_approval": [
-          {
-            "status": "APPLICATION_SUBMITTED",
-            "stage": "application_and_approval",
-            "timestamp": "2025-08-15T09:30:00Z",
-            "description": "Status updated to APPLICATION_SUBMITTED"
-          },
           {
             "status": "APPLICATION_SUBMITTED",
             "stage": "application_and_approval",
@@ -95,45 +84,39 @@ Processing file: sample_data/bank_input_2_approved.json
         "shipping_and_delivery": []
       }
     }
-  ],
-  "done_tracking": []
+  ]
 }
 
 Processing file: sample_data/manufacturer_input_1_queued.json
 ✅ Local state updated successfully.
 
---- FINAL DISPLAY OUTPUT FOR CUSTOMER: CUST_789012 ---
+--- CURRENT STATE FOR CUSTOMER: CUST_789012 ---
 {
-  "customer_id": "CUST_789012",
+  "_id": "CUST_789012",
   "customer_info": {
     "name": "John Doe",
     "mobile": "+919876543210"
   },
-  "in_tracking": [
+  "cards": [
     {
       "tracking_ids": {
         "application_id": "APP_HDFC_123456",
         "manufacturer_order_id": "ORD_GEM_ABC123",
         "logistics_tracking_number": null
       },
+      "tracking_status": "active",
       "card_info": {
         "bank_name": "HDFC Bank",
         "card_type": "Credit Card",
-        "card_variant": "Platinum",
-        "last_four_digits": null
+        "card_variant": "Platinum"
       },
       "current_status": {
         "stage": "PRODUCTION_QUEUED",
+        "location": null,
         "last_updated": "2025-08-15T16:00:00Z"
       },
       "timeline": {
         "application_and_approval": [
-          {
-            "status": "APPLICATION_SUBMITTED",
-            "stage": "application_and_approval",
-            "timestamp": "2025-08-15T09:30:00Z",
-            "description": "Status updated to APPLICATION_SUBMITTED"
-          },
           {
             "status": "APPLICATION_SUBMITTED",
             "stage": "application_and_approval",
@@ -156,50 +139,41 @@ Processing file: sample_data/manufacturer_input_1_queued.json
           }
         ],
         "shipping_and_delivery": []
-      },
-      "delivery_info": {
-        "courier_partner": null
       }
     }
-  ],
-  "done_tracking": []
+  ]
 }
 
 Processing file: sample_data/manufacturer_input_2_dispatched.json
 ✅ Local state updated successfully.
 
---- FINAL DISPLAY OUTPUT FOR CUSTOMER: CUST_789012 ---
+--- CURRENT STATE FOR CUSTOMER: CUST_789012 ---
 {
-  "customer_id": "CUST_789012",
+  "_id": "CUST_789012",
   "customer_info": {
     "name": "John Doe",
     "mobile": "+919876543210"
   },
-  "in_tracking": [
+  "cards": [
     {
       "tracking_ids": {
         "application_id": "APP_HDFC_123456",
         "manufacturer_order_id": "ORD_GEM_ABC123",
         "logistics_tracking_number": "DTDC987654321"
       },
+      "tracking_status": "active",
       "card_info": {
         "bank_name": "HDFC Bank",
         "card_type": "Credit Card",
-        "card_variant": "Platinum",
-        "last_four_digits": "1234"
+        "card_variant": "Platinum"
       },
       "current_status": {
         "stage": "DISPATCHED",
+        "location": null,
         "last_updated": "2025-08-17T11:30:00Z"
       },
       "timeline": {
         "application_and_approval": [
-          {
-            "status": "APPLICATION_SUBMITTED",
-            "stage": "application_and_approval",
-            "timestamp": "2025-08-15T09:30:00Z",
-            "description": "Status updated to APPLICATION_SUBMITTED"
-          },
           {
             "status": "APPLICATION_SUBMITTED",
             "stage": "application_and_approval",
@@ -229,22 +203,145 @@ Processing file: sample_data/manufacturer_input_2_dispatched.json
             "description": "Status updated to DISPATCHED"
           }
         ]
-      },
-      "delivery_info": {
-        "courier_partner": "DTDC"
       }
     }
-  ],
-  "done_tracking": []
+  ]
 }
 
 Processing file: sample_data/logistics_input_1_in_transit.json
 ✅ Local state updated successfully.
-Could not determine which customer to display.
 
+--- RAW STATE (No customer context yet) ---
+{
+  "CUST_789012": {
+    "_id": "CUST_789012",
+    "customer_info": {
+      "name": "John Doe",
+      "mobile": "+919876543210"
+    },
+    "cards": [
+      {
+        "tracking_ids": {
+          "application_id": "APP_HDFC_123456",
+          "manufacturer_order_id": "ORD_GEM_ABC123",
+          "logistics_tracking_number": "DTDC987654321"
+        },
+        "tracking_status": "active",
+        "card_info": {
+          "bank_name": "HDFC Bank",
+          "card_type": "Credit Card",
+          "card_variant": "Platinum"
+        },
+        "current_status": {
+          "stage": "DISPATCHED",
+          "location": null,
+          "last_updated": "2025-08-17T11:30:00Z"
+        },
+        "timeline": {
+          "application_and_approval": [
+            {
+              "status": "APPLICATION_SUBMITTED",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-15T09:30:00Z",
+              "description": "Status updated to APPLICATION_SUBMITTED"
+            },
+            {
+              "status": "APPLICATION_APPROVED",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-15T14:30:00Z",
+              "description": "Status updated to APPLICATION_APPROVED"
+            }
+          ],
+          "card_production": [
+            {
+              "status": "PRODUCTION_QUEUED",
+              "stage": "card_production",
+              "timestamp": "2025-08-15T16:00:00Z",
+              "description": "Status updated to PRODUCTION_QUEUED"
+          ],
+          "shipping_and_delivery": [
+            {
+              "status": "DISPATCHED",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-17T11:30:00Z",
+              "description": "Status updated to DISPATCHED"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
 
 Processing file: sample_data/logistics_input_2_delivered.json
 ✅ Local state updated successfully.
-Could not determine which customer to display.
-(.venv)
-]
+
+--- RAW STATE (No customer context yet) ---
+{
+  "CUST_789012": {
+    "_id": "CUST_789012",
+    "customer_info": {
+      "name": "John Doe",
+      "mobile": "+919876543210"
+    },
+    "cards": [
+      {
+        "tracking_ids": {
+          "application_id": "APP_HDFC_123456",
+          "manufacturer_order_id": "ORD_GEM_ABC123",
+          "logistics_tracking_number": "DTDC987654321"
+        },
+        "tracking_status": "active",
+        "card_info": {
+          "bank_name": "HDFC Bank",
+          "card_type": "Credit Card",
+          "card_variant": "Platinum"
+        },
+        "current_status": {
+          "stage": "DISPATCHED",
+          "location": null,
+          "last_updated": "2025-08-17T11:30:00Z"
+        },
+        "timeline": {
+          "application_and_approval": [
+            {
+              "status": "APPLICATION_SUBMITTED",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-15T09:30:00Z",
+              "description": "Status updated to APPLICATION_SUBMITTED"
+            },
+            {
+              "status": "APPLICATION_APPROVED",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-15T14:30:00Z",
+              "description": "Status updated to APPLICATION_APPROVED"
+            }
+          ],
+          "card_production": [
+            {
+              "status": "PRODUCTION_QUEUED",
+              "stage": "card_production",
+              "timestamp": "2025-08-15T16:00:00Z",
+              "description": "Status updated to PRODUCTION_QUEUED"
+            }
+          ],
+          "shipping_and_delivery": [
+            {
+              "status": "DISPATCHED",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-17T11:30:00Z",
+              "description": "Status updated to DISPATCHED"
+            }
+          ]
+        }
+      }
+    ]
+  }
+} 
+          ]
+        }
+      }
+    ]
+  }
+}
+}

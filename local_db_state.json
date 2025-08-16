@@ -8,16 +8,20 @@
     "cards": [
       {
         "tracking_ids": {
-          "application_id": "APP_HDFC_123456"
+          "application_id": "APP_HDFC_123456",
+          "manufacturer_order_id": "ORD_GEM_ABC123",
+          "logistics_tracking_number": "DTDC987654321"
         },
+        "tracking_status": "completed",
         "card_info": {
           "bank_name": "HDFC Bank",
           "card_type": "Credit Card",
           "card_variant": "Platinum"
         },
         "current_status": {
-          "stage": "APPLICATION_SUBMITTED",
-          "last_updated": "2025-08-15T09:30:00Z"
+          "stage": "DELIVERED",
+          "location": "Customer Address",
+          "last_updated": "2025-08-19T13:00:00Z"
         },
         "timeline": {
           "application_and_approval": [
@@ -26,10 +30,42 @@
               "stage": "application_and_approval",
               "timestamp": "2025-08-15T09:30:00Z",
               "description": "Status updated to APPLICATION_SUBMITTED"
+            },
+            {
+              "status": "APPLICATION_APPROVED",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-15T14:30:00Z",
+              "description": "Status updated to APPLICATION_APPROVED"
             }
           ],
-          "card_production": [],
-          "shipping_and_delivery": []
+          "card_production": [
+            {
+              "status": "PRODUCTION_QUEUED",
+              "stage": "card_production",
+              "timestamp": "2025-08-15T16:00:00Z",
+              "description": "Status updated to PRODUCTION_QUEUED"
+            }
+          ],
+          "shipping_and_delivery": [
+            {
+              "status": "DISPATCHED",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-17T11:30:00Z",
+              "description": "Status updated to DISPATCHED"
+            },
+            {
+              "status": "IN_TRANSIT",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-17T18:45:00Z",
+              "description": "Status updated to IN_TRANSIT"
+            },
+            {
+              "status": "DELIVERED",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-19T13:00:00Z",
+              "description": "Status updated to DELIVERED"
+            }
+          ]
         }
       }
     ]

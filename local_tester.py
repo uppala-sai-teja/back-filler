@@ -4,28 +4,20 @@ from datetime import datetime
 from jsonpath_ng import parse
 import os
 
-# The local file that will act as our mock database
 LOCAL_STATE_FILE = "local_db_state.json"
-
-# --- Helper and Processing Functions (Mostly Unchanged) ---
 
 def load_json_file(file_path):
     try:
-        with open(file_path, 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        print(f"Error: File not found at {file_path}")
-        return None
-    except json.JSONDecodeError:
-        print(f"Error: Could not decode JSON from {file_path}")
+        with open(file_path, 'r') as f: return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading {file_path}: {e}")
         return None
 
 def process_data(raw_data, template):
     processed = {}
     for key, path in template.get("field_mappings", {}).items():
         matches = [match.value for match in parse(path).find(raw_data)]
-        if matches:
-            processed[key] = matches[0]
+        if matches: processed[key] = matches[0]
 
     raw_status = processed.get("status")
     if raw_status:
@@ -39,96 +31,81 @@ def process_data(raw_data, template):
             }
     return processed
 
-# --- Core Logic for Updating State (Now Stores More Card Info) ---
+def find_card_and_customer(state, template, data):
+    """Finds the card object and its parent customer ID."""
+    lookup_key = template.get("lookup_key")
+    lookup_value = data.get(lookup_key)
+    
+    if template.get("provider_type") == "bank":
+        application_id = data.get("application_id")
+        customer_doc = state.get(lookup_value, {})
+        for card in customer_doc.get("cards", []):
+            if card.get("tracking_ids", {}).get("application_id") == application_id:
+                return card, lookup_value
+        return None, lookup_value
+
+    for cid, cust_doc in state.items():
+        for card in cust_doc.get("cards", []):
+            if card.get("tracking_ids", {}).get(lookup_key) == lookup_value:
+                return card, cid
+    return None, None
 
 def update_local_state(current_state, data, template):
-    provider_type = template.get("provider_type")
-    
-    if provider_type == "bank":
+    timeline_event = data.get("timeline_event")
+    if not timeline_event:
+        print("-> No valid status event found in input. Skipping update.")
+        return current_state
+
+    card_to_update, customer_id = find_card_and_customer(current_state, template, data)
+    new_status = data.get("status")
+
+    if not card_to_update and template.get("provider_type") == "bank":
         customer_id = data.get("customer_id")
-        application_id = data.get("application_id")
-        
         if customer_id not in current_state:
-            current_state[customer_id] = {
-                "_id": customer_id,
-                "customer_info": {"name": data.get("customer_name"), "mobile": data.get("mobile")},
-                "cards": []
-            }
+            current_state[customer_id] = {"_id": customer_id, "customer_info": {"name": data.get("customer_name"), "mobile": data.get("mobile")}, "cards": []}
         
-        customer_doc = current_state[customer_id]
-        card_index = next((i for i, card in enumerate(customer_doc.get("cards", [])) if card["tracking_ids"]["application_id"] == application_id), -1)
+        card_to_update = {
+            "tracking_ids": {"application_id": data.get("application_id")}, "tracking_status": "active",
+            "card_info": { "bank_name": template.get("provider_name"), "card_type": data.get("card_type"), "card_variant": data.get("card_variant") },
+            "current_status": {}, "timeline": {"application_and_approval": [], "card_production": [], "shipping_and_delivery": []}
+        }
+        current_state[customer_id]["cards"].append(card_to_update)
+        print(f"-> Creating new card record for application: {data.get('application_id')}")
 
-        if card_index != -1:
-            customer_doc["cards"][card_index]["current_status"]["stage"] = data.get("status")
-            customer_doc["cards"][card_index]["timeline"]["application_and_approval"].append(data.get("timeline_event"))
-        else:
-            new_card = {
-                "tracking_ids": {"application_id": application_id},
-                "card_info": { # <-- **IMPROVEMENT 2: STORING MORE CARD DETAILS**
-                    "bank_name": template.get("provider_name"),
-                    "card_type": data.get("card_type"),
-                    "card_variant": data.get("card_variant")
-                },
-                "current_status": {"stage": data.get("status"), "last_updated": data.get("timeline_event",{}).get("timestamp")},
-                "timeline": {"application_and_approval": [data.get("timeline_event")], "card_production": [], "shipping_and_delivery": []}
-            }
-            customer_doc["cards"].append(new_card)
+    if not card_to_update:
+        print(f"❌ Error: Could not find a matching card record to update.")
+        return current_state
 
-    elif provider_type == "card_manufacturer":
-        application_id = data.get("application_id")
-        for cust_doc in current_state.values():
-            for card in cust_doc.get("cards", []):
-                if card["tracking_ids"]["application_id"] == application_id:
-                    card["tracking_ids"]["manufacturer_order_id"] = data.get("manufacturer_order_id")
-                    card["tracking_ids"]["logistics_tracking_number"] = data.get("tracking_number")
-                    card["card_info"]["last_four_digits"] = data.get("last_four_digits")
-                    card.setdefault("delivery_info", {})["courier_partner"] = data.get("courier_partner")
-                    card["current_status"] = {"stage": data.get("status"), "last_updated": data.get("timeline_event",{}).get("timestamp")}
-                    stage = data['timeline_event']['stage']
-                    card["timeline"].setdefault(stage, []).append(data.get("timeline_event"))
-                    break
+    all_events = [event for stage_events in card_to_update["timeline"].values() for event in stage_events]
+    if all_events:
+        last_event_timestamp = max(event.get("timestamp", "") for event in all_events)
+        if timeline_event.get("timestamp", "") <= last_event_timestamp:
+            print(f"-> Ignoring old event '{new_status}'.")
+            return current_state
 
-    elif provider_type == "logistics":
-        tracking_number = data.get("tracking_number")
-        for cust_doc in current_state.values():
-            for card in cust_doc.get("cards", []):
-                if card.get("tracking_ids", {}).get("logistics_tracking_number") == tracking_number:
-                    card["current_status"] = {"stage": data.get("status"), "location": data.get("current_location"), "last_updated": data.get("timeline_event",{}).get("timestamp")}
-                    card["timeline"]["shipping_and_delivery"].append(data.get("timeline_event"))
-                    break
+    print(f"-> Applying new event: {new_status}")
+    stage = timeline_event['stage']
+    card_to_update["timeline"].setdefault(stage, []).append(timeline_event)
+    card_to_update["current_status"] = {"stage": new_status, "location": data.get("current_location"), "last_updated": timeline_event.get("timestamp")}
 
+    if template.get("provider_type") == "card_manufacturer":
+        card_to_update["tracking_ids"]["manufacturer_order_id"] = data.get("manufacturer_order_id")
+        card_to_update["tracking_ids"]["logistics_tracking_number"] = data.get("logistics_tracking_number")
+
+    final_statuses = ["DELIVERED", "APPLICATION_REJECTED", "APPLICATION_CANCELLED", "RETURNED_TO_SENDER"]
+    if new_status in final_statuses:
+        card_to_update["tracking_status"] = "completed"
+        
     return current_state
 
-# --- **IMPROVEMENT 1: CORRECTED FUNCTION TO FORMAT THE FINAL OUTPUT** ---
-
 def format_state_for_display(state, customer_id_to_display):
-    """
-    Takes the raw state and a specific customer ID, then formats the output
-    for that single customer with segregated card lists.
-    """
-    # Find the specific customer document from the state
     cust_doc = state.get(customer_id_to_display)
-    
-    if not cust_doc:
-        print(f"Error: Could not find customer '{customer_id_to_display}' in the local state.")
-        return None
-
-    # This will be the final, single-customer JSON object
-    formatted_customer = {
-        "customer_id": cust_doc.get("_id"),
-        "customer_info": cust_doc.get("customer_info"),
-        "in_tracking": [],
-        "done_tracking": []
-    }
-    
+    if not cust_doc: return None
+    formatted_customer = {"customer_id": cust_doc.get("_id"), "customer_info": cust_doc.get("customer_info"), "in_tracking": [], "done_tracking": []}
     final_statuses = ["DELIVERED", "APPLICATION_REJECTED", "APPLICATION_CANCELLED"]
-    
     for card in cust_doc.get("cards", []):
-        if card.get("current_status", {}).get("stage") in final_statuses:
-            formatted_customer["done_tracking"].append(card)
-        else:
-            formatted_customer["in_tracking"].append(card)
-    
+        if card.get("current_status", {}).get("stage") in final_statuses: formatted_customer["done_tracking"].append(card)
+        else: formatted_customer["in_tracking"].append(card)
     return formatted_customer
 
 def pretty_print_json(data):
@@ -142,44 +119,25 @@ def main():
     args = parser.parse_args()
 
     if args.reset:
-        if os.path.exists(LOCAL_STATE_FILE):
-            os.remove(LOCAL_STATE_FILE)
-            print(f"✅ Local state file '{LOCAL_STATE_FILE}' has been reset.")
-        else:
-            print("⚪ No local state file to reset.")
+        if os.path.exists(LOCAL_STATE_FILE): os.remove(LOCAL_STATE_FILE)
+        print(f"✅ Local state file '{LOCAL_STATE_FILE}' has been reset.")
         return
 
-    if not args.input_file or not args.template_file:
-        parser.print_help()
-        return
+    if not args.input_file or not args.template_file: parser.print_help(); return
 
     current_state = load_json_file(LOCAL_STATE_FILE) or {}
     print(f"\nProcessing file: {args.input_file}")
-    raw_data = load_json_file(args.input_file)
-    template = load_json_file(args.template_file)
+    raw_data = load_json_file(args.input_file); template = load_json_file(args.template_file)
     if raw_data is None or template is None: return
 
     processed_data = process_data(raw_data, template)
-    
-    # We need to know which customer was affected to display them correctly
-    customer_id_to_display = processed_data.get("customer_id")
-    if not customer_id_to_display:
-        # If the input isn't from the bank, we need to find the customer ID
-        lookup_key = template.get("lookup_key")
-        lookup_value = processed_data.get(lookup_key)
-        for cid, doc in current_state.items():
-            for card in doc.get("cards", []):
-                if card.get("tracking_ids", {}).get(lookup_key) == lookup_value:
-                    customer_id_to_display = cid
-                    break
-            if customer_id_to_display:
-                break
-    
+    _, customer_id_to_display = find_card_and_customer(current_state, template, processed_data)
+    if not customer_id_to_display and template.get("provider_type") == "bank":
+        customer_id_to_display = processed_data.get("customer_id")
+        
     new_state = update_local_state(current_state, processed_data, template)
 
-    with open(LOCAL_STATE_FILE, "w") as f:
-        json.dump(new_state, f, indent=2)
-    
+    with open(LOCAL_STATE_FILE, "w") as f: json.dump(new_state, f, indent=2)
     print("✅ Local state updated successfully.")
     
     if customer_id_to_display:

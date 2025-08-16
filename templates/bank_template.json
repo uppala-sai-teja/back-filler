@@ -3,8 +3,22 @@
   "provider_type": "bank",
   "lookup_key": "customer_id",
   "status_mappings": {
-    "submitted": { "status": "APPLICATION_SUBMITTED", "stage": "application_and_approval" },
-    "approved": { "status": "APPLICATION_APPROVED", "stage": "application_and_approval" }
+    "submitted": {
+      "status": "APPLICATION_SUBMITTED",
+      "stage": "application_and_approval"
+    },
+    "approved": {
+      "status": "APPLICATION_APPROVED",
+      "stage": "application_and_approval"
+    },
+    "rejected": {
+      "status": "APPLICATION_REJECTED",
+      "stage": "application_and_approval"
+    },
+    "cancelled_by_customer": {
+      "status": "APPLICATION_CANCELLED",
+      "stage": "application_and_approval"
+    }
   },
   "field_mappings": {
     "application_id": "application_id",
