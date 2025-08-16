@@ -1,0 +1,6 @@
+{
+  "order_id": "ORD_GEM_ABC123", "bank_reference": "APP_HDFC_123456",
+  "production_status": "dispatched", "dispatch_date": "2025-08-17T11:30:00Z",
+  "courier_partner": "DTDC", "tracking_number": "DTDC987654321",
+  "card_details": { "card_number_last4": "1234" }
+}
