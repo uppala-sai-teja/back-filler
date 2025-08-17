@@ -1,0 +1,80 @@
+{
+    "bank": {
+        "default_bank_template": {
+            "provider_name": "Bank",
+            "provider_type": "bank",
+            "lookup_key": "customer_id",
+            "status_mappings": {
+                "submitted": {
+                    "status": "APPLICATION_SUBMITTED",
+                    "stage": "application_and_approval"
+                },
+                "approved": {
+                    "status": "APPLICATION_APPROVED",
+                    "stage": "application_and_approval"
+                }
+            },
+            "field_mappings": {
+                "application_id": "application_id",
+                "customer_id": "customer_id",
+                "customer_name": "customer_name",
+                "mobile": "mobile",
+                "card_type": "card_type",
+                "card_variant": "card_variant",
+                "status": "status",
+                "application_date": "application_date",
+                "approval_date": "approval_date"
+            }
+        }
+    },
+    "card_manufacturer": {
+        "default_manufacturer_template": {
+            "provider_name": "provider_name",
+            "provider_type": "card_manufacturer",
+            "lookup_key": "application_id",
+            "status_mappings": {
+                "received": {
+                    "status": "PRODUCTION_QUEUED",
+                    "stage": "card_production"
+                },
+                "dispatched": {
+                    "status": "DISPATCHED",
+                    "stage": "shipping_and_delivery"
+                }
+            },
+            "field_mappings": {
+                "application_id": "bank_reference",
+                "manufacturer_order_id": "order_id",
+                "logistics_tracking_number": "tracking_number",
+                "courier_partner": "courier_partner",
+                "last_four_digits": "card_details.card_number_last4",
+                "status": "production_status",
+                "dispatch_date": "dispatch_date",
+                "received_date": "received_date"
+            }
+        }
+    },
+    "logistics": {
+        "default_logistics_template": {
+            "provider_name": "provider_name",
+            "provider_type": "logistics",
+            "lookup_key": "logistics_tracking_number",
+            "status_mappings": {
+                "in_transit": {
+                    "status": "IN_TRANSIT",
+                    "stage": "shipping_and_delivery"
+                },
+                "delivered": {
+                    "status": "DELIVERED",
+                    "stage": "shipping_and_delivery"
+                }
+            },
+            "field_mappings": {
+                "logistics_tracking_number": "awb_number",
+                "status": "shipment_status",
+                "current_location": "current_location",
+                "last_updated": "tracking_history[-1:].timestamp"
+            }
+        }
+    }
+}

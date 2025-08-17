@@ -7,9 +7,7 @@ import os
 LOCAL_STATE_FILE = "local_db_state.json"
 MASTER_CONFIG_FILE = "master_config.json"
 
-# --- All helper and logic functions remain the same as the final local_tester.py ---
-# (We are just changing the main execution loop)
-
+# --- All helper and logic functions remain the same ---
 def load_json_file(file_path):
     try:
         with open(file_path, 'r') as f: return json.load(f)
@@ -83,52 +81,54 @@ def update_local_state(current_state, data, template):
 def pretty_print_json(data):
     print(json.dumps(data, indent=2, default=str))
 
-# --- THE NEW MAIN EXECUTION LOGIC ---
+# --- **THE CORRECTED MAIN FUNCTION** ---
 def main():
     parser = argparse.ArgumentParser(description="Process bulk data files using a master configuration.")
+    # --- FIX: Make the main arguments optional so --reset can work alone ---
     parser.add_argument("bulk_input_file", nargs='?', default=None, help="Path to the bulk input JSON data file.")
+    parser.add_argument("--type", choices=['bank', 'card_manufacturer', 'logistics'], help="The type of data in the input file.")
     parser.add_argument("--reset", action="store_true", help="Reset the local state file to empty.")
     args = parser.parse_args()
 
+    # --- FIX: Handle the --reset action FIRST and then exit ---
     if args.reset:
-        if os.path.exists(LOCAL_STATE_FILE): os.remove(LOCAL_STATE_FILE)
-        print(f"✅ Local state file '{LOCAL_STATE_FILE}' has been reset.")
-        return
+        if os.path.exists(LOCAL_STATE_FILE):
+            os.remove(LOCAL_STATE_FILE)
+            print(f"✅ Local state file '{LOCAL_STATE_FILE}' has been reset.")
+        else:
+            print("⚪ No local state file to reset.")
+        return # Exit the script immediately
 
-    if not args.bulk_input_file:
+    # --- FIX: If not resetting, THEN validate that the other arguments are present ---
+    if not args.bulk_input_file or not args.type:
+        print("❌ Error: For processing, you must provide both a bulk_input_file and the --type argument.")
         parser.print_help()
         return
 
-    # 1. Load the single master configuration
+    # --- The rest of the logic proceeds as normal ---
     master_config = load_json_file(MASTER_CONFIG_FILE)
     if master_config is None: return
 
-    # 2. This is the "pull the old data from DB" step
-    current_state = load_json_file(LOCAL_STATE_FILE) or {}
+    provider_templates = master_config.get(args.type)
+    if not provider_templates:
+        print(f"❌ Error: No templates found for type '{args.type}' in {MASTER_CONFIG_FILE}")
+        return
     
-    # 3. Load the new bulk input data
+    template = next(iter(provider_templates.values()), None)
+    if not template:
+        print(f"❌ Error: No template definition found under the '{args.type}' section.")
+        return
+
+    current_state = load_json_file(LOCAL_STATE_FILE) or {}
     bulk_data = load_json_file(args.bulk_input_file)
     if bulk_data is None: return
 
-    print(f"\nProcessing {len(bulk_data)} records from {args.bulk_input_file}...")
+    print(f"\nProcessing {len(bulk_data)} records from {args.bulk_input_file} as type '{args.type}'...")
 
-    # 4. Loop through each record in the bulk file
     for record in bulk_data:
-        provider_name = record.get("provider")
-        if not provider_name:
-            print(f"⚠️ Skipping record, missing 'provider' key: {record}")
-            continue
-
-        template = master_config.get(provider_name)
-        if not template:
-            print(f"⚠️ Skipping record, no template found for provider '{provider_name}': {record}")
-            continue
-        
-        # 5. Process and update the state for each record
         processed_data = process_data(record, template)
         current_state = update_local_state(current_state, processed_data, template)
 
-    # 6. Save the final "stitched" data back to the file
     with open(LOCAL_STATE_FILE, "w") as f:
         json.dump(current_state, f, indent=2)
     
