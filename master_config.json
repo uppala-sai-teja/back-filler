@@ -32,9 +32,18 @@
             "provider_name": "provider_name",
             "provider_type": "card_manufacturer",
             "lookup_key": "application_id",
+            "history_field": "production_history",
             "status_mappings": {
                 "received": {
                     "status": "PRODUCTION_QUEUED",
+                    "stage": "card_production"
+                },
+                "in_production": {
+                    "status": "PRODUCTION_STARTED",
+                    "stage": "card_production"
+                },
+                "completed": {
+                    "status": "CARD_PERSONALIZED",
                     "stage": "card_production"
                 },
                 "dispatched": {
@@ -43,14 +52,13 @@
                 }
             },
             "field_mappings": {
-                "application_id": "bank_reference",
-                "manufacturer_order_id": "order_id",
-                "logistics_tracking_number": "tracking_number",
+                "application_id": "bank_reference"
+            },
+            "history_mappings": {
+                "status": "status",
+                "timestamp": "timestamp",
                 "courier_partner": "courier_partner",
-                "last_four_digits": "card_details.card_number_last4",
-                "status": "production_status",
-                "dispatch_date": "dispatch_date",
-                "received_date": "received_date"
+                "tracking_number": "tracking_number"
             }
         }
     },
@@ -59,7 +67,12 @@
             "provider_name": "provider_name",
             "provider_type": "logistics",
             "lookup_key": "logistics_tracking_number",
+            "history_field": "tracking_history",
             "status_mappings": {
+                "picked_up": {
+                    "status": "DISPATCHED",
+                    "stage": "shipping_and_delivery"
+                },
                 "in_transit": {
                     "status": "IN_TRANSIT",
                     "stage": "shipping_and_delivery"
@@ -70,10 +83,12 @@
                 }
             },
             "field_mappings": {
-                "logistics_tracking_number": "awb_number",
-                "status": "shipment_status",
-                "current_location": "current_location",
-                "last_updated": "tracking_history[-1:].timestamp"
+                "logistics_tracking_number": "awb_number"
+            },
+            "history_mappings": {
+                "status": "status",
+                "timestamp": "timestamp",
+                "location": "location"
             }
         }
     }
