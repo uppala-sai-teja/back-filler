@@ -1,0 +1,40 @@
+[
+    {
+      "awb_number": "DTDC123456789",
+      "recipient_name": "John Doe",
+      "recipient_mobile": "+919876543210",
+      "delivery_address": "123 Main Street, Mumbai 400001",
+      "tracking_history": [
+        {
+          "status": "picked_up",
+          "timestamp": "2025-08-17T10:00:00Z",
+          "location": "Chennai Hub",
+          "description": "Package picked up from sender"
+        },
+        {
+          "status": "in_transit",
+          "timestamp": "2025-08-17T15:30:00Z",
+          "location": "Bangalore Hub",
+          "description": "Package in transit to destination"
+        },
+        {
+          "status": "in_transit",
+          "timestamp": "2025-08-18T08:00:00Z",
+          "location": "Mumbai Hub",
+          "description": "Package arrived at destination city"
+        },
+        {
+          "status": "out_for_delivery",
+          "timestamp": "2025-08-18T09:30:00Z",
+          "location": "Mumbai Local Hub",
+          "description": "Out for delivery"
+        },
+        {
+          "status": "delivered",
+          "timestamp": "2025-08-18T14:45:00Z",
+          "location": "Customer Address",
+          "description": "Package delivered successfully"
+        }
+      ]
+    }
+  ]

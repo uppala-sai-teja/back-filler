@@ -1,95 +1,161 @@
 {
     "bank": {
-        "default_bank_template": {
-            "provider_name": "Bank",
-            "provider_type": "bank",
-            "lookup_key": "customer_id",
-            "status_mappings": {
-                "submitted": {
-                    "status": "APPLICATION_SUBMITTED",
-                    "stage": "application_and_approval"
-                },
-                "approved": {
-                    "status": "APPLICATION_APPROVED",
-                    "stage": "application_and_approval"
-                }
-            },
-            "field_mappings": {
-                "application_id": "application_id",
-                "customer_id": "customer_id",
-                "customer_name": "customer_name",
-                "mobile": "mobile",
-                "card_type": "card_type",
-                "card_variant": "card_variant",
-                "status": "status",
-                "application_date": "application_date",
-                "approval_date": "approval_date"
-            }
+      "default": {
+        "provider_name": "Bank",
+        "provider_type": "bank",
+        "lookup_key": "customer_id",
+        "field_mappings": {
+          "customer_id": "customer_id",
+          "customer_name": "customer_name",
+          "mobile": "mobile",
+          "email": "email",
+          "application_id": "application_id",
+          "application_date": "application_date",
+          "card_type": "card_type",
+          "card_variant": "card_variant",
+          "status": "status",
+          "approval_date": "approval_date",
+          "estimated_delivery": "estimated_delivery"
+        },
+        "status_mappings": {
+          "submitted": {
+            "status": "APPLICATION_SUBMITTED",
+            "stage": "application_and_approval",
+            "description": "Application submitted successfully"
+          },
+          "under_review": {
+            "status": "APPLICATION_PROCESSING",
+            "stage": "application_and_approval",
+            "description": "Application under review"
+          },
+          "approved": {
+            "status": "APPLICATION_APPROVED",
+            "stage": "application_and_approval",
+            "description": "Application approved by bank"
+          },
+          "rejected": {
+            "status": "APPLICATION_REJECTED",
+            "stage": "application_and_approval",
+            "description": "Application rejected"
+          },
+          "sent_to_production": {
+            "status": "PRODUCTION_QUEUED",
+            "stage": "card_production",
+            "description": "Card order sent to production"
+          }
         }
+      }
     },
+    
     "card_manufacturer": {
-        "default_manufacturer_template": {
-            "provider_name": "provider_name",
-            "provider_type": "card_manufacturer",
-            "lookup_key": "application_id",
-            "history_field": "production_history",
-            "status_mappings": {
-                "received": {
-                    "status": "PRODUCTION_QUEUED",
-                    "stage": "card_production"
-                },
-                "in_production": {
-                    "status": "PRODUCTION_STARTED",
-                    "stage": "card_production"
-                },
-                "completed": {
-                    "status": "CARD_PERSONALIZED",
-                    "stage": "card_production"
-                },
-                "dispatched": {
-                    "status": "DISPATCHED",
-                    "stage": "shipping_and_delivery"
-                }
-            },
-            "field_mappings": {
-                "application_id": "bank_reference"
-            },
-            "history_mappings": {
-                "status": "status",
-                "timestamp": "timestamp",
-                "courier_partner": "courier_partner",
-                "tracking_number": "tracking_number"
-            }
+      "default": {
+        "provider_name": "Card Manufacturer",
+        "provider_type": "card_manufacturer",
+        "lookup_key": "application_id",
+        "history_field": "production_history",
+        "field_mappings": {
+          "application_id": "bank_reference",
+          "manufacturer_order_id": "order_id",
+          "production_batch": "batch_number",
+          "facility_location": "facility"
+        },
+        "history_mappings": {
+          "status": "status",
+          "timestamp": "timestamp",
+          "location": "location",
+          "courier_partner": "courier_partner",
+          "tracking_number": "tracking_number"
+        },
+        "status_mappings": {
+          "received": {
+            "status": "PRODUCTION_QUEUED",
+            "stage": "card_production",
+            "description": "Order received at production facility"
+          },
+          "in_production": {
+            "status": "PRODUCTION_STARTED",
+            "stage": "card_production",
+            "description": "Card production in progress"
+          },
+          "embossing": {
+            "status": "CARD_EMBOSSING",
+            "stage": "card_production",
+            "description": "Card being embossed and personalized"
+          },
+          "quality_check": {
+            "status": "QUALITY_CHECK",
+            "stage": "card_production",
+            "description": "Card undergoing quality verification"
+          },
+          "completed": {
+            "status": "CARD_PERSONALIZED",
+            "stage": "card_production",
+            "description": "Card production completed"
+          },
+          "dispatched": {
+            "status": "DISPATCHED",
+            "stage": "shipping_and_delivery",
+            "description": "Card dispatched to courier"
+          }
         }
+      }
     },
+    
     "logistics": {
-        "default_logistics_template": {
-            "provider_name": "provider_name",
-            "provider_type": "logistics",
-            "lookup_key": "logistics_tracking_number",
-            "history_field": "tracking_history",
-            "status_mappings": {
-                "picked_up": {
-                    "status": "DISPATCHED",
-                    "stage": "shipping_and_delivery"
-                },
-                "in_transit": {
-                    "status": "IN_TRANSIT",
-                    "stage": "shipping_and_delivery"
-                },
-                "delivered": {
-                    "status": "DELIVERED",
-                    "stage": "shipping_and_delivery"
-                }
-            },
-            "field_mappings": {
-                "logistics_tracking_number": "awb_number"
-            },
-            "history_mappings": {
-                "status": "status",
-                "timestamp": "timestamp",
-                "location": "location"
-            }
+      "default": {
+        "provider_name": "Logistics Partner",
+        "provider_type": "logistics",
+        "lookup_key": "logistics_tracking_number",
+        "history_field": "tracking_history",
+        "field_mappings": {
+          "logistics_tracking_number": "awb_number",
+          "recipient_name": "recipient_name",
+          "recipient_mobile": "recipient_mobile",
+          "delivery_address": "delivery_address"
+        },
+        "history_mappings": {
+          "status": "status",
+          "timestamp": "timestamp",
+          "location": "location",
+          "description": "description"
+        },
+        "status_mappings": {
+          "picked_up": {
+            "status": "PICKED_UP",
+            "stage": "shipping_and_delivery",
+            "description": "Package picked up from sender"
+          },
+          "in_transit": {
+            "status": "IN_TRANSIT",
+            "stage": "shipping_and_delivery",
+            "description": "Package in transit"
+          },
+          "reached_hub": {
+            "status": "REACHED_HUB",
+            "stage": "shipping_and_delivery",
+            "description": "Package reached destination hub"
+          },
+          "out_for_delivery": {
+            "status": "OUT_FOR_DELIVERY",
+            "stage": "shipping_and_delivery",
+            "description": "Package out for delivery"
+          },
+          "delivered": {
+            "status": "DELIVERED",
+            "stage": "shipping_and_delivery",
+            "description": "Package delivered successfully"
+          },
+          "delivery_failed": {
+            "status": "DELIVERY_FAILED",
+            "stage": "shipping_and_delivery",
+            "description": "Delivery attempt failed"
+          },
+          "returned": {
+            "status": "RETURNED_TO_SENDER",
+            "stage": "shipping_and_delivery",
+            "description": "Package returned to sender"
+          }
         }
+      }
     }
-}
+  }
