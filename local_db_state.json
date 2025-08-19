@@ -8,14 +8,14 @@
     },
     "cards": [
       {
-        "card_id": "CARD_APP_001_1755584284",
+        "card_id": "CARD_APP_001_1755584886",
         "tracking_ids": {
           "application_id": "APP_001",
           "customer_id": "CUST_001",
           "manufacturer_order_id": "MFG_ORDER_001",
           "logistics_tracking_number": "DTDC123456789"
         },
-        "tracking_status": "active",
+        "tracking_status": "completed",
         "card_info": {
           "bank_name": "Bank",
           "card_type": "credit_card",
@@ -23,11 +23,11 @@
           "card_purpose": "new_application"
         },
         "current_status": {
-          "status": "DISPATCHED",
+          "status": "DELIVERED",
           "stage": "shipping_and_delivery",
-          "location": "Chennai Hub",
-          "last_updated": "2025-08-17T09:00:00Z",
-          "description": "Card dispatched to courier"
+          "location": "Customer Address",
+          "last_updated": "2025-08-18T14:45:00Z",
+          "description": "Package delivered successfully"
         },
         "timeline": {
           "application_and_approval": [
@@ -138,20 +138,72 @@
                 "tracking_number": "DTDC123456789",
                 "batch_number": "BATCH_2025_08_001"
               }
+            },
+            {
+              "status": "PICKED_UP",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-17T10:00:00Z",
+              "description": "Package picked up from sender",
+              "location": "Chennai Hub",
+              "provider": "Logistics Partner",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            },
+            {
+              "status": "IN_TRANSIT",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-17T15:30:00Z",
+              "description": "Package in transit",
+              "location": "Bangalore Hub",
+              "provider": "Logistics Partner",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            },
+            {
+              "status": "OUT_FOR_DELIVERY",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-18T09:30:00Z",
+              "description": "Package out for delivery",
+              "location": "Mumbai Local Hub",
+              "provider": "Logistics Partner",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            },
+            {
+              "status": "DELIVERED",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-18T14:45:00Z",
+              "description": "Package delivered successfully",
+              "location": "Customer Address",
+              "provider": "Logistics Partner",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
             }
           ]
         },
         "delivery_info": {},
         "metadata": {
-          "created_at": "2025-08-19T06:18:04.800839Z",
-          "last_updated": "2025-08-19T06:19:23.723398Z",
+          "created_at": "2025-08-19T06:28:06.825378Z",
+          "last_updated": "2025-08-19T06:31:40.805466Z",
           "priority": "standard"
         }
       }
     ],
     "metadata": {
-      "created_at": "2025-08-19T06:18:04.800833Z",
-      "last_updated": "2025-08-19T06:19:23.723398Z"
+      "created_at": "2025-08-19T06:28:06.825373Z",
+      "last_updated": "2025-08-19T06:31:40.805466Z"
     }
   },
   "CUST_002": {
@@ -163,7 +215,7 @@
     },
     "cards": [
       {
-        "card_id": "CARD_APP_002_1755584284",
+        "card_id": "CARD_APP_002_1755584886",
         "tracking_ids": {
           "application_id": "APP_002",
           "customer_id": "CUST_002",
@@ -178,11 +230,11 @@
           "card_purpose": "new_application"
         },
         "current_status": {
-          "status": "PRODUCTION_STARTED",
-          "stage": "card_production",
-          "location": "Mumbai Production Unit",
-          "last_updated": "2025-08-17T11:00:00Z",
-          "description": "Card production in progress"
+          "status": "APPLICATION_PROCESSING",
+          "stage": "application_and_approval",
+          "location": "Unknown",
+          "last_updated": "2025-08-16T10:10:00Z",
+          "description": "Application under review"
         },
         "timeline": {
           "application_and_approval": [
@@ -191,6 +243,19 @@
               "stage": "application_and_approval",
               "timestamp": "2025-08-16T10:00:00Z",
               "description": "Application submitted successfully",
+              "location": "Unknown",
+              "provider": "Bank",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            },
+            {
+              "status": "APPLICATION_PROCESSING",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-16T10:10:00Z",
+              "description": "Application under review",
               "location": "Unknown",
               "provider": "Bank",
               "metadata": {
@@ -232,15 +297,15 @@
         },
         "delivery_info": {},
         "metadata": {
-          "created_at": "2025-08-19T06:18:04.904852Z",
-          "last_updated": "2025-08-19T06:19:23.741760Z",
+          "created_at": "2025-08-19T06:28:06.933257Z",
+          "last_updated": "2025-08-19T06:35:01.139927Z",
           "priority": "standard"
         }
       }
     ],
     "metadata": {
-      "created_at": "2025-08-19T06:18:04.904843Z",
-      "last_updated": "2025-08-19T06:19:23.741760Z"
+      "created_at": "2025-08-19T06:28:06.933248Z",
+      "last_updated": "2025-08-19T06:35:01.139927Z"
     }
   }
 }

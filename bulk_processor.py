@@ -383,15 +383,30 @@ class CardTrackingProcessor:
         if not state:
             print("\n📭 No tracking data found")
             return
+
         total_customers = len(state)
         total_cards = sum(len(customer.get("cards", [])) for customer in state.values())
         print(f"\n📈 Customers: {total_customers}, Cards: {total_cards}")
+
+        # Current status breakdown (latest only)
         status_counts = {}
+        # Timeline breakdown (all events)
+        timeline_counts = {}
+
         for customer in state.values():
             for card in customer.get("cards", []):
+                # Count current status
                 status = card.get("current_status", {}).get("status", "Unknown")
                 status_counts[status] = status_counts.get(status, 0) + 1
-        print("📊 Status Breakdown:", status_counts)
+
+                # Count all timeline statuses
+                for stage, events in card.get("timeline", {}).items():
+                    for ev in events:
+                        s = ev.get("status", "Unknown")
+                        timeline_counts[s] = timeline_counts.get(s, 0) + 1
+
+        print("📊 Current Status Breakdown:", status_counts)
+        print("📜 Timeline Status Breakdown:", timeline_counts)
 
 
 # ------------------------- CLI Entry -------------------------

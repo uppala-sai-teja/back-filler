@@ -1,0 +1,13 @@
+[
+    {
+      "customer_id": "CUST_002",
+      "customer_name": "Jane Smith",
+      "mobile": "+919876543211",
+      "email": "jane@example.com", 
+      "application_id": "APP_002",
+      "application_date": "2025-08-16T10:10:00Z",
+      "card_type": "debit_card",
+      "card_variant": "gold",
+      "status": "under_review"
+    }
+]

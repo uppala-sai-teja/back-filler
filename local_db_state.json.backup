@@ -8,14 +8,14 @@
     },
     "cards": [
       {
-        "card_id": "CARD_APP_001_1755584284",
+        "card_id": "CARD_APP_001_1755584886",
         "tracking_ids": {
           "application_id": "APP_001",
           "customer_id": "CUST_001",
-          "manufacturer_order_id": null,
-          "logistics_tracking_number": null
+          "manufacturer_order_id": "MFG_ORDER_001",
+          "logistics_tracking_number": "DTDC123456789"
         },
-        "tracking_status": "active",
+        "tracking_status": "completed",
         "card_info": {
           "bank_name": "Bank",
           "card_type": "credit_card",
@@ -23,11 +23,11 @@
           "card_purpose": "new_application"
         },
         "current_status": {
-          "status": "APPLICATION_APPROVED",
-          "stage": "application_and_approval",
-          "location": "Unknown",
-          "last_updated": "2025-08-15T14:30:00Z",
-          "description": "Application approved by bank"
+          "status": "DELIVERED",
+          "stage": "shipping_and_delivery",
+          "location": "Customer Address",
+          "last_updated": "2025-08-18T14:45:00Z",
+          "description": "Package delivered successfully"
         },
         "timeline": {
           "application_and_approval": [
@@ -58,20 +58,152 @@
               }
             }
           ],
-          "card_production": [],
-          "shipping_and_delivery": []
+          "card_production": [
+            {
+              "status": "PRODUCTION_QUEUED",
+              "stage": "card_production",
+              "timestamp": "2025-08-16T08:00:00Z",
+              "description": "Order received at production facility",
+              "location": "Chennai Production Unit",
+              "provider": "Card Manufacturer",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": "BATCH_2025_08_001"
+              }
+            },
+            {
+              "status": "PRODUCTION_STARTED",
+              "stage": "card_production",
+              "timestamp": "2025-08-16T10:00:00Z",
+              "description": "Card production in progress",
+              "location": "Chennai Production Unit",
+              "provider": "Card Manufacturer",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": "BATCH_2025_08_001"
+              }
+            },
+            {
+              "status": "CARD_EMBOSSING",
+              "stage": "card_production",
+              "timestamp": "2025-08-16T14:00:00Z",
+              "description": "Card being embossed and personalized",
+              "location": "Chennai Production Unit",
+              "provider": "Card Manufacturer",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": "BATCH_2025_08_001"
+              }
+            },
+            {
+              "status": "QUALITY_CHECK",
+              "stage": "card_production",
+              "timestamp": "2025-08-16T16:00:00Z",
+              "description": "Card undergoing quality verification",
+              "location": "Chennai Production Unit",
+              "provider": "Card Manufacturer",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": "BATCH_2025_08_001"
+              }
+            },
+            {
+              "status": "CARD_PERSONALIZED",
+              "stage": "card_production",
+              "timestamp": "2025-08-16T18:00:00Z",
+              "description": "Card production completed",
+              "location": "Chennai Production Unit",
+              "provider": "Card Manufacturer",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": "BATCH_2025_08_001"
+              }
+            }
+          ],
+          "shipping_and_delivery": [
+            {
+              "status": "DISPATCHED",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-17T09:00:00Z",
+              "description": "Card dispatched to courier",
+              "location": "Chennai Hub",
+              "provider": "Card Manufacturer",
+              "metadata": {
+                "courier_partner": "DTDC",
+                "tracking_number": "DTDC123456789",
+                "batch_number": "BATCH_2025_08_001"
+              }
+            },
+            {
+              "status": "PICKED_UP",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-17T10:00:00Z",
+              "description": "Package picked up from sender",
+              "location": "Chennai Hub",
+              "provider": "Logistics Partner",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            },
+            {
+              "status": "IN_TRANSIT",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-17T15:30:00Z",
+              "description": "Package in transit",
+              "location": "Bangalore Hub",
+              "provider": "Logistics Partner",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            },
+            {
+              "status": "OUT_FOR_DELIVERY",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-18T09:30:00Z",
+              "description": "Package out for delivery",
+              "location": "Mumbai Local Hub",
+              "provider": "Logistics Partner",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            },
+            {
+              "status": "DELIVERED",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-18T14:45:00Z",
+              "description": "Package delivered successfully",
+              "location": "Customer Address",
+              "provider": "Logistics Partner",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            }
+          ]
         },
         "delivery_info": {},
         "metadata": {
-          "created_at": "2025-08-19T06:18:04.800839Z",
-          "last_updated": "2025-08-19T06:18:04.854856Z",
+          "created_at": "2025-08-19T06:28:06.825378Z",
+          "last_updated": "2025-08-19T06:31:40.805466Z",
           "priority": "standard"
         }
       }
     ],
     "metadata": {
-      "created_at": "2025-08-19T06:18:04.800833Z",
-      "last_updated": "2025-08-19T06:18:04.854856Z"
+      "created_at": "2025-08-19T06:28:06.825373Z",
+      "last_updated": "2025-08-19T06:31:40.805466Z"
     }
   },
   "CUST_002": {
@@ -83,11 +215,11 @@
     },
     "cards": [
       {
-        "card_id": "CARD_APP_002_1755584284",
+        "card_id": "CARD_APP_002_1755584886",
         "tracking_ids": {
           "application_id": "APP_002",
           "customer_id": "CUST_002",
-          "manufacturer_order_id": null,
+          "manufacturer_order_id": "MFG_ORDER_002",
           "logistics_tracking_number": null
         },
         "tracking_status": "active",
@@ -98,11 +230,11 @@
           "card_purpose": "new_application"
         },
         "current_status": {
-          "status": "APPLICATION_SUBMITTED",
-          "stage": "application_and_approval",
-          "location": "Unknown",
-          "last_updated": "2025-08-16T10:00:00Z",
-          "description": "Application submitted successfully"
+          "status": "PRODUCTION_STARTED",
+          "stage": "card_production",
+          "location": "Mumbai Production Unit",
+          "last_updated": "2025-08-17T11:00:00Z",
+          "description": "Card production in progress"
         },
         "timeline": {
           "application_and_approval": [
@@ -120,20 +252,47 @@
               }
             }
           ],
-          "card_production": [],
+          "card_production": [
+            {
+              "status": "PRODUCTION_QUEUED",
+              "stage": "card_production",
+              "timestamp": "2025-08-17T09:00:00Z",
+              "description": "Order received at production facility",
+              "location": "Mumbai Production Unit",
+              "provider": "Card Manufacturer",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": "BATCH_2025_08_002"
+              }
+            },
+            {
+              "status": "PRODUCTION_STARTED",
+              "stage": "card_production",
+              "timestamp": "2025-08-17T11:00:00Z",
+              "description": "Card production in progress",
+              "location": "Mumbai Production Unit",
+              "provider": "Card Manufacturer",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": "BATCH_2025_08_002"
+              }
+            }
+          ],
           "shipping_and_delivery": []
         },
         "delivery_info": {},
         "metadata": {
-          "created_at": "2025-08-19T06:18:04.904852Z",
-          "last_updated": "2025-08-19T06:18:04.904868Z",
+          "created_at": "2025-08-19T06:28:06.933257Z",
+          "last_updated": "2025-08-19T06:28:48.141649Z",
           "priority": "standard"
         }
       }
     ],
     "metadata": {
-      "created_at": "2025-08-19T06:18:04.904843Z",
-      "last_updated": "2025-08-19T06:18:04.904868Z"
+      "created_at": "2025-08-19T06:28:06.933248Z",
+      "last_updated": "2025-08-19T06:28:48.141649Z"
     }
   }
 }
