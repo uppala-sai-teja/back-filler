@@ -1,14 +1,15 @@
-2025-08-19 10:27:29,888 - WARNING - File not found: local_db_state.json
-2025-08-19 10:27:30,059 - WARNING - File not found: notifications.json
-2025-08-19 10:27:30,060 - INFO - Saved data to notifications.json
-2025-08-19 10:27:30,061 - INFO - Saved data to local_db_state.json
-2025-08-19 10:29:58,266 - INFO - Saved data to notifications.json
-2025-08-19 10:29:58,267 - INFO - Saved data to local_db_state.json
-2025-08-19 10:31:20,508 - INFO - Saved data to notifications.json
-2025-08-19 10:31:20,509 - INFO - Saved data to local_db_state.json
-2025-08-19 10:36:12,991 - INFO - Saved data to notifications.json
-2025-08-19 10:36:12,993 - INFO - Saved data to local_db_state.json
-2025-08-19 10:37:21,868 - WARNING - Could not normalize phone: invalid_phone
-2025-08-19 10:37:21,870 - ERROR - Validation errors: ['Missing required field: customer_id', 'Invalid mobile format: invalid_phone']
-2025-08-19 10:37:21,987 - INFO - Saved data to notifications.json
-2025-08-19 10:37:21,989 - INFO - Saved data to local_db_state.json
+2025-08-19 12:16:41,347 - WARNING - File not found: local_db_state.json
+2025-08-19 12:16:41,555 - WARNING - File not found: notifications.json
+2025-08-19 12:16:41,555 - INFO - Saved data to notifications.json
+2025-08-19 12:16:41,556 - INFO - Saved data to local_db_state.json
+2025-08-19 12:17:58,091 - INFO - Saved data to notifications.json
+2025-08-19 12:17:58,092 - INFO - Saved data to local_db_state.json
+2025-08-19 12:20:05,224 - INFO - Saved data to notifications.json
+2025-08-19 12:20:05,225 - INFO - Saved data to local_db_state.json
+2025-08-19 12:21:03,125 - INFO - Saved data to local_db_state.json
+2025-08-19 12:22:14,484 - INFO - Saved data to notifications.json
+2025-08-19 12:22:14,485 - INFO - Saved data to local_db_state.json
+2025-08-19 12:22:44,744 - WARNING - Could not normalize phone: invalid_phone
+2025-08-19 12:22:44,746 - ERROR - Validation errors: ['Missing required field: customer_id', 'Invalid mobile format: invalid_phone']
+2025-08-19 12:22:44,869 - INFO - Saved data to notifications.json
+2025-08-19 12:22:44,870 - INFO - Saved data to local_db_state.json

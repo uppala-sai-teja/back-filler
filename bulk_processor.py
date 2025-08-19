@@ -265,22 +265,14 @@ class CardTrackingProcessor:
                      data.get("application_date") or 
                      datetime.now().isoformat() + "Z")
         
+        # Simplified timeline event - no metadata here
         return {
             "status": status_mapping["status"],
             "stage": status_mapping["stage"],
             "timestamp": self.normalize_date(timestamp),
             "description": status_mapping["description"],
             "location": data.get("location", data.get("facility_location", "Unknown")),
-            "provider": template.get("provider_name"),
-            "metadata": {
-                "courier_partner": data.get("courier_partner"),
-                "tracking_number": data.get("tracking_number"),
-                "batch_number": data.get("production_batch"),
-                "estimated_delivery": self.calculate_estimated_delivery(
-                    status_mapping["status"], 
-                    data.get("location", "")
-                )
-            }
+            "provider": template.get("provider_name")
         }
 
     def process_data(self, raw_data: Dict, template: Dict) -> Generator[Dict, None, None]:
@@ -384,11 +376,19 @@ class CardTrackingProcessor:
             },
             "delivery_info": {},
             "estimated_delivery": None,
+            # Centralized metadata for the entire application
+            "application_metadata": {
+                "courier_partner": None,
+                "current_tracking_number": None,
+                "production_batch": None,
+                "facility_location": None,
+                "priority": "standard",
+                "alerts": [],
+                "processing_notes": []
+            },
             "metadata": {
                 "created_at": timestamp, 
-                "last_updated": timestamp, 
-                "priority": "standard",
-                "alerts": []
+                "last_updated": timestamp
             }
         }
 
@@ -494,10 +494,39 @@ class CardTrackingProcessor:
             "description": timeline_event["description"]
         }
 
-        # Update estimated delivery
-        estimated = timeline_event.get("metadata", {}).get("estimated_delivery")
-        if estimated:
-            card["estimated_delivery"] = estimated
+        # Update centralized application metadata
+        if not card.get("application_metadata"):
+            card["application_metadata"] = {
+                "courier_partner": None,
+                "current_tracking_number": None,
+                "production_batch": None,
+                "facility_location": None,
+                "priority": "standard",
+                "alerts": [],
+                "processing_notes": []
+            }
+
+        # Update application-level metadata based on provider data
+        app_metadata = card["application_metadata"]
+        
+        if data.get("courier_partner"):
+            app_metadata["courier_partner"] = data["courier_partner"]
+        if data.get("tracking_number"):
+            app_metadata["current_tracking_number"] = data["tracking_number"]
+        if data.get("production_batch"):
+            app_metadata["production_batch"] = data["production_batch"]
+        if data.get("facility_location") or data.get("location"):
+            app_metadata["facility_location"] = data.get("facility_location") or data.get("location")
+
+        # Update estimated delivery only when status changes meaningfully
+        if timeline_event["status"] in ["APPLICATION_APPROVED", "PRODUCTION_QUEUED", 
+                                       "CARD_PERSONALIZED", "DISPATCHED", "OUT_FOR_DELIVERY"]:
+            estimated = self.calculate_estimated_delivery(
+                timeline_event["status"], 
+                timeline_event["location"]
+            )
+            if estimated:
+                card["estimated_delivery"] = estimated
 
         # Update tracking IDs
         if provider_type == "card_manufacturer":
