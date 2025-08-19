@@ -49,3 +49,6 @@
 2025-08-19 06:28:48,142 - INFO - Saved data to local_db_state.json
 2025-08-19 06:31:40,806 - INFO - Saved data to local_db_state.json
 2025-08-19 06:35:01,140 - INFO - Saved data to local_db_state.json
+2025-08-19 06:49:59,541 - INFO - Saved data to local_db_state.json
+2025-08-19 06:52:52,171 - WARNING - Could not normalize phone: invalid_phone
+2025-08-19 06:52:52,283 - INFO - Saved data to local_db_state.json

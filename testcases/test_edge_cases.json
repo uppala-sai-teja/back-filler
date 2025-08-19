@@ -1,0 +1,23 @@
+[
+    {
+        "customer_id": "",
+        "customer_name": "Invalid Customer",
+        "mobile": "invalid_phone",
+        "application_id": "APP_INVALID_001",
+        "status": "submitted"
+    },
+    {
+        "customer_id": "CUST_005",
+        "customer_name": "Valid Customer",
+        "mobile": "9876543210",
+        "application_id": "APP_006",
+        "status": "unknown_status"
+    },
+    {
+        "customer_id": "CUST_006",
+        "customer_name": "Partial Data Customer",
+        "application_id": "APP_007",
+        "card_type": "credit_card",
+        "status": "approved"
+    }
+]

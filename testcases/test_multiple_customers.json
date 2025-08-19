@@ -1,0 +1,36 @@
+[
+    {
+        "customer_id": "CUST_003",
+        "customer_name": "Alice Johnson",
+        "mobile": "9123456789",
+        "email": "alice@example.com",
+        "application_id": "APP_003",
+        "application_date": "2025-08-14T11:00:00Z",
+        "card_type": "credit_card",
+        "card_variant": "gold",
+        "status": "approved",
+        "approval_date": "2025-08-15T09:00:00Z"
+    },
+    {
+        "customer_id": "CUST_003",
+        "customer_name": "Alice Johnson",
+        "mobile": "9123456789",
+        "email": "alice@example.com",
+        "application_id": "APP_004",
+        "application_date": "2025-08-14T11:30:00Z",
+        "card_type": "debit_card",
+        "card_variant": "platinum",
+        "status": "submitted"
+    },
+    {
+        "customer_id": "CUST_004",
+        "customer_name": "Bob Wilson",
+        "mobile": "+919998887777",
+        "email": "bob@example.com",
+        "application_id": "APP_005",
+        "application_date": "2025-08-16T14:00:00Z",
+        "card_type": "credit_card",
+        "card_variant": "basic",
+        "status": "under_review"
+    }
+]

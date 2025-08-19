@@ -230,11 +230,11 @@
           "card_purpose": "new_application"
         },
         "current_status": {
-          "status": "PRODUCTION_STARTED",
-          "stage": "card_production",
-          "location": "Mumbai Production Unit",
-          "last_updated": "2025-08-17T11:00:00Z",
-          "description": "Card production in progress"
+          "status": "APPLICATION_PROCESSING",
+          "stage": "application_and_approval",
+          "location": "Unknown",
+          "last_updated": "2025-08-16T10:10:00Z",
+          "description": "Application under review"
         },
         "timeline": {
           "application_and_approval": [
@@ -243,6 +243,19 @@
               "stage": "application_and_approval",
               "timestamp": "2025-08-16T10:00:00Z",
               "description": "Application submitted successfully",
+              "location": "Unknown",
+              "provider": "Bank",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            },
+            {
+              "status": "APPLICATION_PROCESSING",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-16T10:10:00Z",
+              "description": "Application under review",
               "location": "Unknown",
               "provider": "Bank",
               "metadata": {
@@ -285,14 +298,186 @@
         "delivery_info": {},
         "metadata": {
           "created_at": "2025-08-19T06:28:06.933257Z",
-          "last_updated": "2025-08-19T06:28:48.141649Z",
+          "last_updated": "2025-08-19T06:35:01.139927Z",
           "priority": "standard"
         }
       }
     ],
     "metadata": {
       "created_at": "2025-08-19T06:28:06.933248Z",
-      "last_updated": "2025-08-19T06:28:48.141649Z"
+      "last_updated": "2025-08-19T06:35:01.139927Z"
+    }
+  },
+  "CUST_003": {
+    "_id": "CUST_003",
+    "customer_info": {
+      "name": "Alice Johnson",
+      "mobile": "+919123456789",
+      "email": "alice@example.com"
+    },
+    "cards": [
+      {
+        "card_id": "CARD_APP_003_1755586199",
+        "tracking_ids": {
+          "application_id": "APP_003",
+          "customer_id": "CUST_003",
+          "manufacturer_order_id": null,
+          "logistics_tracking_number": null
+        },
+        "tracking_status": "active",
+        "card_info": {
+          "bank_name": "Bank",
+          "card_type": "credit_card",
+          "card_variant": "gold",
+          "card_purpose": "new_application"
+        },
+        "current_status": {
+          "status": "APPLICATION_APPROVED",
+          "stage": "application_and_approval",
+          "location": "Unknown",
+          "last_updated": "2025-08-15T09:00:00Z",
+          "description": "Application approved by bank"
+        },
+        "timeline": {
+          "application_and_approval": [
+            {
+              "status": "APPLICATION_APPROVED",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-15T09:00:00Z",
+              "description": "Application approved by bank",
+              "location": "Unknown",
+              "provider": "Bank",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            }
+          ],
+          "card_production": [],
+          "shipping_and_delivery": []
+        },
+        "delivery_info": {},
+        "metadata": {
+          "created_at": "2025-08-19T06:49:59.433461Z",
+          "last_updated": "2025-08-19T06:49:59.433472Z",
+          "priority": "standard"
+        }
+      },
+      {
+        "card_id": "CARD_APP_004_1755586199",
+        "tracking_ids": {
+          "application_id": "APP_004",
+          "customer_id": "CUST_003",
+          "manufacturer_order_id": null,
+          "logistics_tracking_number": null
+        },
+        "tracking_status": "active",
+        "card_info": {
+          "bank_name": "Bank",
+          "card_type": "debit_card",
+          "card_variant": "platinum",
+          "card_purpose": "new_application"
+        },
+        "current_status": {
+          "status": "APPLICATION_SUBMITTED",
+          "stage": "application_and_approval",
+          "location": "Unknown",
+          "last_updated": "2025-08-14T11:30:00Z",
+          "description": "Application submitted successfully"
+        },
+        "timeline": {
+          "application_and_approval": [
+            {
+              "status": "APPLICATION_SUBMITTED",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-14T11:30:00Z",
+              "description": "Application submitted successfully",
+              "location": "Unknown",
+              "provider": "Bank",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            }
+          ],
+          "card_production": [],
+          "shipping_and_delivery": []
+        },
+        "delivery_info": {},
+        "metadata": {
+          "created_at": "2025-08-19T06:49:59.487304Z",
+          "last_updated": "2025-08-19T06:49:59.487315Z",
+          "priority": "standard"
+        }
+      }
+    ],
+    "metadata": {
+      "created_at": "2025-08-19T06:49:59.433454Z",
+      "last_updated": "2025-08-19T06:49:59.487315Z"
+    }
+  },
+  "CUST_004": {
+    "_id": "CUST_004",
+    "customer_info": {
+      "name": "Bob Wilson",
+      "mobile": "+919998887777",
+      "email": "bob@example.com"
+    },
+    "cards": [
+      {
+        "card_id": "CARD_APP_005_1755586199",
+        "tracking_ids": {
+          "application_id": "APP_005",
+          "customer_id": "CUST_004",
+          "manufacturer_order_id": null,
+          "logistics_tracking_number": null
+        },
+        "tracking_status": "active",
+        "card_info": {
+          "bank_name": "Bank",
+          "card_type": "credit_card",
+          "card_variant": "basic",
+          "card_purpose": "new_application"
+        },
+        "current_status": {
+          "status": "APPLICATION_PROCESSING",
+          "stage": "application_and_approval",
+          "location": "Unknown",
+          "last_updated": "2025-08-16T14:00:00Z",
+          "description": "Application under review"
+        },
+        "timeline": {
+          "application_and_approval": [
+            {
+              "status": "APPLICATION_PROCESSING",
+              "stage": "application_and_approval",
+              "timestamp": "2025-08-16T14:00:00Z",
+              "description": "Application under review",
+              "location": "Unknown",
+              "provider": "Bank",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
+            }
+          ],
+          "card_production": [],
+          "shipping_and_delivery": []
+        },
+        "delivery_info": {},
+        "metadata": {
+          "created_at": "2025-08-19T06:49:59.539835Z",
+          "last_updated": "2025-08-19T06:49:59.539843Z",
+          "priority": "standard"
+        }
+      }
+    ],
+    "metadata": {
+      "created_at": "2025-08-19T06:49:59.539830Z",
+      "last_updated": "2025-08-19T06:49:59.539843Z"
     }
   }
 }
