@@ -1,0 +1,104 @@
+[
+  {
+    "customer_id": "CUST_001",
+    "customer_name": "John Doe",
+    "mobile": "+919876543210",
+    "email": "john@example.com",
+    "card_id": "CARD_APP_001_1755599249",
+    "card_type": "credit_card",
+    "status": "APPLICATION_APPROVED",
+    "description": "Application approved by bank",
+    "timestamp": "2025-08-15T14:30:00Z",
+    "notification_type": [
+      "sms",
+      "email",
+      "push"
+    ],
+    "sent": false
+  },
+  {
+    "customer_id": "CUST_001",
+    "customer_name": "John Doe",
+    "mobile": "+919876543210",
+    "email": "john@example.com",
+    "card_id": "CARD_APP_001_1755599249",
+    "card_type": "credit_card",
+    "status": "DISPATCHED",
+    "description": "Card dispatched to courier",
+    "timestamp": "2025-08-17T09:00:00Z",
+    "notification_type": [
+      "sms",
+      "email",
+      "push"
+    ],
+    "sent": false
+  },
+  {
+    "customer_id": "CUST_001",
+    "customer_name": "John Doe",
+    "mobile": "+919876543210",
+    "email": "john@example.com",
+    "card_id": "CARD_APP_001_1755599249",
+    "card_type": "credit_card",
+    "status": "OUT_FOR_DELIVERY",
+    "description": "Package out for delivery",
+    "timestamp": "2025-08-18T09:30:00Z",
+    "notification_type": [
+      "sms",
+      "email",
+      "push"
+    ],
+    "sent": false
+  },
+  {
+    "customer_id": "CUST_001",
+    "customer_name": "John Doe",
+    "mobile": "+919876543210",
+    "email": "john@example.com",
+    "card_id": "CARD_APP_001_1755599249",
+    "card_type": "credit_card",
+    "status": "DELIVERED",
+    "description": "Package delivered successfully",
+    "timestamp": "2025-08-18T14:45:00Z",
+    "notification_type": [
+      "sms",
+      "email",
+      "push"
+    ],
+    "sent": false
+  },
+  {
+    "customer_id": "CUST_003",
+    "customer_name": "Alice Johnson",
+    "mobile": "+919123456789",
+    "email": "alice@example.com",
+    "card_id": "CARD_APP_003_1755599772",
+    "card_type": "credit_card",
+    "status": "APPLICATION_APPROVED",
+    "description": "Application approved by bank",
+    "timestamp": "2025-08-15T09:00:00Z",
+    "notification_type": [
+      "sms",
+      "email",
+      "push"
+    ],
+    "sent": false
+  },
+  {
+    "customer_id": "CUST_006",
+    "customer_name": "Partial Data Customer",
+    "mobile": "",
+    "email": "",
+    "card_id": "CARD_APP_007_1755599841",
+    "card_type": "credit_card",
+    "status": "APPLICATION_APPROVED",
+    "description": "Application approved by bank",
+    "timestamp": "2025-08-19T10:37:21.986934Z",
+    "notification_type": [
+      "sms",
+      "email",
+      "push"
+    ],
+    "sent": false
+  }
+]

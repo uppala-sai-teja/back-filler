@@ -3,14 +3,18 @@ import argparse
 import logging
 import re
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from jsonpath_ng import parse
 from typing import Dict, List, Any, Optional, Generator
+import asyncio
+import aiohttp
+from concurrent.futures import ThreadPoolExecutor
 
 # Configuration files
 LOCAL_STATE_FILE = "local_db_state.json"
 MASTER_CONFIG_FILE = "master_config.json"
 LOG_FILE = "processor.log"
+NOTIFICATIONS_FILE = "notifications.json"
 
 # Required fields for validation
 REQUIRED_FIELDS = {
@@ -19,11 +23,28 @@ REQUIRED_FIELDS = {
     "logistics": ["logistics_tracking_number"]
 }
 
+# Status hierarchy for progression validation
+STATUS_HIERARCHY = {
+    "application_and_approval": [
+        "APPLICATION_SUBMITTED", "APPLICATION_PROCESSING", 
+        "APPLICATION_APPROVED", "APPLICATION_REJECTED"
+    ],
+    "card_production": [
+        "PRODUCTION_QUEUED", "PRODUCTION_STARTED", "CARD_EMBOSSING",
+        "QUALITY_CHECK", "CARD_PERSONALIZED"
+    ],
+    "shipping_and_delivery": [
+        "DISPATCHED", "PICKED_UP", "IN_TRANSIT", "REACHED_HUB",
+        "OUT_FOR_DELIVERY", "DELIVERED", "DELIVERY_FAILED", "RETURNED_TO_SENDER"
+    ]
+}
+
 
 class CardTrackingProcessor:
     def __init__(self, debug=False):
         self.setup_logging(debug)
-        self.stats = {"processed": 0, "errors": 0, "skipped": 0}
+        self.stats = {"processed": 0, "errors": 0, "skipped": 0, "notifications_sent": 0}
+        self.notification_queue = []
         
     def setup_logging(self, debug):
         level = logging.DEBUG if debug else logging.INFO
@@ -56,7 +77,7 @@ class CardTrackingProcessor:
         try:
             if os.path.exists(file_path):
                 backup_file = f"{file_path}.backup"
-                if os.path.exists(backup_file):   # Windows-safe overwrite
+                if os.path.exists(backup_file):
                     os.remove(backup_file)
                 os.rename(file_path, backup_file)
                 self.logger.debug(f"Created/overwritten backup: {backup_file}")
@@ -80,7 +101,7 @@ class CardTrackingProcessor:
             return None
         return template
 
-    # ------------------------- Normalizers -------------------------
+    # ------------------------- Enhanced Normalizers -------------------------
 
     def normalize_phone_number(self, phone: str) -> str:
         if not phone:
@@ -102,7 +123,9 @@ class CardTrackingProcessor:
             "%Y-%m-%dT%H:%M:%S.%fZ",
             "%Y-%m-%d %H:%M:%S",
             "%d-%m-%Y %H:%M:%S",
-            "%Y-%m-%d"
+            "%Y-%m-%d",
+            "%d/%m/%Y",
+            "%m/%d/%Y"
         ]
         for pattern in patterns:
             try:
@@ -112,7 +135,52 @@ class CardTrackingProcessor:
                 continue
         return date_str
 
-    # ------------------------- Extractors -------------------------
+    def calculate_estimated_delivery(self, current_status: str, location: str = "") -> Optional[str]:
+        """Calculate estimated delivery date based on current status"""
+        base_date = datetime.now()
+        
+        if current_status == "APPLICATION_APPROVED":
+            # 5-7 days for production + shipping
+            estimated = base_date + timedelta(days=6)
+        elif current_status in ["PRODUCTION_QUEUED", "PRODUCTION_STARTED"]:
+            # 3-5 days for remaining production + shipping
+            estimated = base_date + timedelta(days=4)
+        elif current_status == "CARD_PERSONALIZED":
+            # 2-3 days for shipping
+            estimated = base_date + timedelta(days=3)
+        elif current_status == "DISPATCHED":
+            # 1-2 days for delivery
+            estimated = base_date + timedelta(days=2)
+        elif current_status in ["IN_TRANSIT", "REACHED_HUB"]:
+            # Same day or next day
+            estimated = base_date + timedelta(days=1)
+        elif current_status == "OUT_FOR_DELIVERY":
+            # Same day
+            estimated = base_date
+        else:
+            return None
+            
+        return estimated.isoformat() + "Z"
+
+    # ------------------------- Enhanced Validation -------------------------
+
+    def validate_status_progression(self, card: Dict, new_status: str, new_stage: str) -> bool:
+        """Validate that status progression is logical"""
+        current_status = card.get("current_status", {}).get("status")
+        
+        if not current_status:
+            return True  # First status, always valid
+            
+        # Check if we're going backwards in the same stage
+        stage_statuses = STATUS_HIERARCHY.get(new_stage, [])
+        if current_status in stage_statuses and new_status in stage_statuses:
+            current_idx = stage_statuses.index(current_status)
+            new_idx = stage_statuses.index(new_status)
+            if new_idx < current_idx:
+                self.logger.warning(f"Status going backwards: {current_status} -> {new_status}")
+                return False
+                
+        return True
 
     def extract_fields(self, raw_data: Dict, field_mappings: Dict) -> Dict:
         extracted = {}
@@ -131,12 +199,58 @@ class CardTrackingProcessor:
         for field in required:
             if not data.get(field):
                 errors.append(f"Missing required field: {field}")
+        
+        # Enhanced mobile validation
         mobile = data.get("mobile")
         if mobile and not re.match(r'^\+91[6-9]\d{9}$', mobile):
             errors.append(f"Invalid mobile format: {mobile}")
+            
+        # Email validation
+        email = data.get("email")
+        if email and not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
+            errors.append(f"Invalid email format: {email}")
+            
         return errors
 
-    # ------------------------- Event creation -------------------------
+    # ------------------------- Notification System -------------------------
+
+    def queue_notification(self, customer_info: Dict, card: Dict, event: Dict):
+        """Queue notification for status changes"""
+        notification = {
+            "customer_id": customer_info.get("_id"),
+            "customer_name": customer_info.get("customer_info", {}).get("name"),
+            "mobile": customer_info.get("customer_info", {}).get("mobile"),
+            "email": customer_info.get("customer_info", {}).get("email"),
+            "card_id": card.get("card_id"),
+            "card_type": card.get("card_info", {}).get("card_type"),
+            "status": event.get("status"),
+            "description": event.get("description"),
+            "timestamp": event.get("timestamp"),
+            "notification_type": self.get_notification_type(event.get("status")),
+            "sent": False
+        }
+        self.notification_queue.append(notification)
+
+    def get_notification_type(self, status: str) -> List[str]:
+        """Determine notification channels based on status"""
+        critical_statuses = ["APPLICATION_APPROVED", "APPLICATION_REJECTED", 
+                           "DISPATCHED", "OUT_FOR_DELIVERY", "DELIVERED"]
+        
+        if status in critical_statuses:
+            return ["sms", "email", "push"]
+        else:
+            return ["push"]
+
+    def save_notifications(self):
+        """Save notification queue to file"""
+        if self.notification_queue:
+            existing = self.load_json_file(NOTIFICATIONS_FILE) or []
+            existing.extend(self.notification_queue)
+            self.save_json_file(NOTIFICATIONS_FILE, existing)
+            self.stats["notifications_sent"] += len(self.notification_queue)
+            self.notification_queue = []
+
+    # ------------------------- Event Creation -------------------------
 
     def create_timeline_event(self, data: Dict, template: Dict) -> Optional[Dict]:
         raw_status = data.get("status")
@@ -145,10 +259,12 @@ class CardTrackingProcessor:
         status_mapping = template.get("status_mappings", {}).get(raw_status)
         if not status_mapping:
             return None
+        
         timestamp = (data.get("timestamp") or 
                      data.get("approval_date") or 
                      data.get("application_date") or 
                      datetime.now().isoformat() + "Z")
+        
         return {
             "status": status_mapping["status"],
             "stage": status_mapping["stage"],
@@ -159,7 +275,11 @@ class CardTrackingProcessor:
             "metadata": {
                 "courier_partner": data.get("courier_partner"),
                 "tracking_number": data.get("tracking_number"),
-                "batch_number": data.get("production_batch")
+                "batch_number": data.get("production_batch"),
+                "estimated_delivery": self.calculate_estimated_delivery(
+                    status_mapping["status"], 
+                    data.get("location", "")
+                )
             }
         }
 
@@ -168,6 +288,7 @@ class CardTrackingProcessor:
             base_data = self.extract_fields(raw_data, template.get("field_mappings", {}))
             if "mobile" in base_data:
                 base_data["mobile"] = self.normalize_phone_number(base_data["mobile"])
+            
             history_field = template.get("history_field")
             if history_field and history_field in raw_data:
                 for item in raw_data.get(history_field, []):
@@ -188,7 +309,7 @@ class CardTrackingProcessor:
             self.logger.error(f"Error processing data: {e}")
             self.stats["errors"] += 1
 
-    # ------------------------- Card/Customer helpers -------------------------
+    # ------------------------- Card/Customer Helpers -------------------------
 
     def move_card_to_customer(self, state, application_id, target_customer_id):
         if not application_id or target_customer_id is None:
@@ -217,6 +338,7 @@ class CardTrackingProcessor:
         lookup_value = data.get(lookup_key)
         if not lookup_value:
             return None, None
+        
         provider_type = template.get("provider_type")
         if provider_type == "bank":
             customer_id = data.get("customer_id")
@@ -226,6 +348,7 @@ class CardTrackingProcessor:
                     if card.get("tracking_ids", {}).get("application_id") == application_id:
                         return card, customer_id
             return None, customer_id
+        
         for customer_id, customer_doc in state.items():
             for card in customer_doc.get("cards", []):
                 if card.get("tracking_ids", {}).get(lookup_key) == lookup_value:
@@ -234,7 +357,10 @@ class CardTrackingProcessor:
 
     def create_new_card(self, data: Dict, template: Dict) -> Dict:
         timestamp = datetime.now().isoformat() + "Z"
-        bank_label = template.get("provider_name", "Bank") if template.get("provider_type") == "bank" else (data.get("bank_name") or "Bank")
+        bank_label = (template.get("provider_name", "Bank") 
+                     if template.get("provider_type") == "bank" 
+                     else (data.get("bank_name") or "Bank"))
+        
         return {
             "card_id": f"CARD_{data.get('application_id', data.get('logistics_tracking_number', 'UNK'))}_{int(datetime.now().timestamp())}",
             "tracking_ids": {
@@ -257,15 +383,22 @@ class CardTrackingProcessor:
                 "shipping_and_delivery": []
             },
             "delivery_info": {},
-            "metadata": {"created_at": timestamp, "last_updated": timestamp, "priority": "standard"}
+            "estimated_delivery": None,
+            "metadata": {
+                "created_at": timestamp, 
+                "last_updated": timestamp, 
+                "priority": "standard",
+                "alerts": []
+            }
         }
 
-    # ------------------------- State Updates -------------------------
+    # ------------------------- Enhanced State Updates -------------------------
 
     def update_state(self, state: Dict, data: Dict, template: Dict) -> Dict:
         timeline_event = data.get("timeline_event")
         if not timeline_event:
             return state
+        
         provider_type = template.get("provider_type")
         lookup_key = template.get("lookup_key")
 
@@ -278,16 +411,22 @@ class CardTrackingProcessor:
                 migrated = self.move_card_to_customer(state, data.get("application_id"), real_customer_id)
                 if migrated:
                     card, customer_id = migrated, real_customer_id
+            
             if real_customer_id not in state:
                 state[real_customer_id] = {
                     "_id": real_customer_id,
-                    "customer_info": {"name": data.get("customer_name", "Unknown"),
-                                      "mobile": data.get("mobile", ""),
-                                      "email": data.get("email", "")},
+                    "customer_info": {
+                        "name": data.get("customer_name", "Unknown"),
+                        "mobile": data.get("mobile", ""),
+                        "email": data.get("email", "")
+                    },
                     "cards": [],
-                    "metadata": {"created_at": datetime.now().isoformat()+"Z",
-                                 "last_updated": datetime.now().isoformat()+"Z"}
+                    "metadata": {
+                        "created_at": datetime.now().isoformat()+"Z",
+                        "last_updated": datetime.now().isoformat()+"Z"
+                    }
                 }
+            
             if not card:
                 card = self.create_new_card(data, template)
                 state[real_customer_id]["cards"].append(card)
@@ -295,17 +434,27 @@ class CardTrackingProcessor:
 
         # Manufacturer/Logistics ingestion before bank
         if provider_type in ("card_manufacturer", "logistics") and not card:
-            placeholder_key = data.get("application_id") or data.get("logistics_tracking_number") or data.get("tracking_number")
+            placeholder_key = (data.get("application_id") or 
+                             data.get("logistics_tracking_number") or 
+                             data.get("tracking_number"))
             placeholder_customer_id = data.get("customer_id") or f"CUST_UNK_{placeholder_key}"
+            
             if placeholder_customer_id not in state:
                 state[placeholder_customer_id] = {
                     "_id": placeholder_customer_id,
-                    "customer_info": {"name": "Unknown", "mobile": data.get("recipient_mobile", ""), "email": ""},
+                    "customer_info": {
+                        "name": "Unknown", 
+                        "mobile": data.get("recipient_mobile", ""), 
+                        "email": ""
+                    },
                     "cards": [],
-                    "metadata": {"created_at": datetime.now().isoformat()+"Z",
-                                 "last_updated": datetime.now().isoformat()+"Z",
-                                 "placeholder": True}
+                    "metadata": {
+                        "created_at": datetime.now().isoformat()+"Z",
+                        "last_updated": datetime.now().isoformat()+"Z",
+                        "placeholder": True
+                    }
                 }
+            
             card = self.create_new_card(data, template)
             state[placeholder_customer_id]["cards"].append(card)
             customer_id = placeholder_customer_id
@@ -315,15 +464,25 @@ class CardTrackingProcessor:
             self.stats["skipped"] += 1
             return state
 
-        # Timeline updates (dedupe identical consecutive logistics statuses)
+        # Validate status progression
+        if not self.validate_status_progression(card, timeline_event["status"], timeline_event["stage"]):
+            self.stats["errors"] += 1
+            return state
+
+        # Timeline updates with enhanced deduplication
         stage = timeline_event["stage"]
         timeline_list = card["timeline"].setdefault(stage, [])
         new_timestamp = timeline_event["timestamp"]
+        
         if timeline_list:
             last_event = timeline_list[-1]
-            if new_timestamp <= last_event.get("timestamp", "") or last_event.get("status") == timeline_event["status"]:
+            # More sophisticated deduplication
+            if (new_timestamp <= last_event.get("timestamp", "") or 
+                (last_event.get("status") == timeline_event["status"] and 
+                 last_event.get("location") == timeline_event["location"])):
                 self.stats["skipped"] += 1
                 return state
+        
         timeline_list.append(timeline_event)
 
         # Update current status
@@ -335,7 +494,12 @@ class CardTrackingProcessor:
             "description": timeline_event["description"]
         }
 
-        # Update IDs
+        # Update estimated delivery
+        estimated = timeline_event.get("metadata", {}).get("estimated_delivery")
+        if estimated:
+            card["estimated_delivery"] = estimated
+
+        # Update tracking IDs
         if provider_type == "card_manufacturer":
             if data.get("manufacturer_order_id"):
                 card["tracking_ids"]["manufacturer_order_id"] = data["manufacturer_order_id"]
@@ -345,14 +509,21 @@ class CardTrackingProcessor:
             if data.get("logistics_tracking_number"):
                 card["tracking_ids"]["logistics_tracking_number"] = data["logistics_tracking_number"]
 
-        # Final statuses
+        # Queue notifications for important status changes
+        if timeline_event["status"] in ["APPLICATION_APPROVED", "APPLICATION_REJECTED", 
+                                       "DISPATCHED", "OUT_FOR_DELIVERY", "DELIVERED"]:
+            self.queue_notification(state[customer_id], card, timeline_event)
+
+        # Handle final statuses
         if timeline_event["status"] in ["DELIVERED", "APPLICATION_REJECTED", "RETURNED_TO_SENDER"]:
             card["tracking_status"] = "completed"
 
+        # Update timestamps
         now = datetime.now().isoformat() + "Z"
         card["metadata"]["last_updated"] = now
         state[customer_id]["metadata"]["last_updated"] = now
         self.stats["processed"] += 1
+        
         return state
 
     # ------------------------- Bulk Processor -------------------------
@@ -360,11 +531,13 @@ class CardTrackingProcessor:
     def process_bulk_data(self, bulk_data: List[Dict], template: Dict) -> Dict:
         state = self.load_json_file(LOCAL_STATE_FILE) or {}
         provider_type = template.get("provider_type")
+        
         for record in bulk_data:
             try:
                 for processed_data in self.process_data(record, template):
                     validation_errors = self.validate_data(processed_data, provider_type)
                     if validation_errors:
+                        self.logger.error(f"Validation errors: {validation_errors}")
                         self.stats["errors"] += 1
                         continue
                     state = self.update_state(state, processed_data, template)
@@ -372,67 +545,149 @@ class CardTrackingProcessor:
                 self.logger.error(f"Error in record: {e}")
                 self.stats["errors"] += 1
                 continue
+                
+        # Save notifications after processing
+        self.save_notifications()
         return state
+
+    # ------------------------- Analytics & Reports -------------------------
+
+    def generate_analytics(self, state: Dict) -> Dict:
+        """Generate analytics from current state"""
+        analytics = {
+            "summary": {
+                "total_customers": len(state),
+                "total_cards": sum(len(customer.get("cards", [])) for customer in state.values()),
+                "active_cards": 0,
+                "completed_cards": 0
+            },
+            "status_breakdown": {},
+            "stage_breakdown": {},
+            "delivery_performance": {
+                "on_time": 0,
+                "delayed": 0,
+                "avg_processing_days": 0
+            },
+            "bank_performance": {},
+            "recent_activity": []
+        }
+        
+        processing_times = []
+        
+        for customer in state.values():
+            for card in customer.get("cards", []):
+                # Card status counts
+                status = card.get("tracking_status", "active")
+                if status == "active":
+                    analytics["summary"]["active_cards"] += 1
+                else:
+                    analytics["summary"]["completed_cards"] += 1
+                
+                # Current status breakdown
+                current_status = card.get("current_status", {}).get("status", "Unknown")
+                analytics["status_breakdown"][current_status] = analytics["status_breakdown"].get(current_status, 0) + 1
+                
+                # Stage breakdown
+                current_stage = card.get("current_status", {}).get("stage", "Unknown")
+                analytics["stage_breakdown"][current_stage] = analytics["stage_breakdown"].get(current_stage, 0) + 1
+                
+                # Bank performance
+                bank = card.get("card_info", {}).get("bank_name", "Unknown")
+                if bank not in analytics["bank_performance"]:
+                    analytics["bank_performance"][bank] = {"total": 0, "completed": 0}
+                analytics["bank_performance"][bank]["total"] += 1
+                if status == "completed":
+                    analytics["bank_performance"][bank]["completed"] += 1
+                
+                # Processing time calculation
+                created = card.get("metadata", {}).get("created_at")
+                last_updated = card.get("metadata", {}).get("last_updated")
+                if created and last_updated:
+                    try:
+                        start = datetime.fromisoformat(created.replace('Z', '+00:00'))
+                        end = datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
+                        processing_times.append((end - start).days)
+                    except:
+                        pass
+        
+        if processing_times:
+            analytics["delivery_performance"]["avg_processing_days"] = sum(processing_times) / len(processing_times)
+        
+        return analytics
 
     # ------------------------- CLI Summaries -------------------------
 
     def print_stats(self):
-        print(f"\n📊 Stats: {self.stats}")
+        print(f"\n📊 Processing Stats:")
+        for key, value in self.stats.items():
+            print(f"  {key.replace('_', ' ').title()}: {value}")
 
     def print_state_summary(self, state: Dict):
         if not state:
             print("\n📭 No tracking data found")
             return
 
-        total_customers = len(state)
-        total_cards = sum(len(customer.get("cards", [])) for customer in state.values())
-        print(f"\n📈 Customers: {total_customers}, Cards: {total_cards}")
-
-        # Current status breakdown (latest only)
-        status_counts = {}
-        # Timeline breakdown (all events)
-        timeline_counts = {}
-
-        for customer in state.values():
-            for card in customer.get("cards", []):
-                # Count current status
-                status = card.get("current_status", {}).get("status", "Unknown")
-                status_counts[status] = status_counts.get(status, 0) + 1
-
-                # Count all timeline statuses
-                for stage, events in card.get("timeline", {}).items():
-                    for ev in events:
-                        s = ev.get("status", "Unknown")
-                        timeline_counts[s] = timeline_counts.get(s, 0) + 1
-
-        print("📊 Current Status Breakdown:", status_counts)
-        print("📜 Timeline Status Breakdown:", timeline_counts)
+        analytics = self.generate_analytics(state)
+        summary = analytics["summary"]
+        
+        print(f"\n📈 Summary:")
+        print(f"  Customers: {summary['total_customers']}")
+        print(f"  Total Cards: {summary['total_cards']}")
+        print(f"  Active: {summary['active_cards']}, Completed: {summary['completed_cards']}")
+        
+        print(f"\n📊 Current Status Breakdown:")
+        for status, count in analytics["status_breakdown"].items():
+            print(f"  {status}: {count}")
+        
+        print(f"\n🏦 Bank Performance:")
+        for bank, perf in analytics["bank_performance"].items():
+            completion_rate = (perf["completed"] / perf["total"] * 100) if perf["total"] > 0 else 0
+            print(f"  {bank}: {perf['completed']}/{perf['total']} ({completion_rate:.1f}%)")
+        
+        avg_days = analytics["delivery_performance"]["avg_processing_days"]
+        if avg_days > 0:
+            print(f"\n⏱️  Average Processing Time: {avg_days:.1f} days")
 
 
 # ------------------------- CLI Entry -------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="Card Tracking Processor")
+    parser = argparse.ArgumentParser(description="Enhanced Card Tracking Processor")
     parser.add_argument("input_file", nargs='?', help="Input JSON data file")
-    parser.add_argument("--type", choices=['bank', 'card_manufacturer', 'logistics'], help="Type of data to process")
+    parser.add_argument("--type", choices=['bank', 'card_manufacturer', 'logistics'], 
+                       help="Type of data to process")
     parser.add_argument("--reset", action="store_true", help="Reset local state")
     parser.add_argument("--show-state", action="store_true", help="Show current tracking state")
+    parser.add_argument("--analytics", action="store_true", help="Show detailed analytics")
+    parser.add_argument("--notifications", action="store_true", help="Show pending notifications")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     args = parser.parse_args()
 
     if args.reset:
-        if os.path.exists(LOCAL_STATE_FILE):
-            os.remove(LOCAL_STATE_FILE)
-            print("✅ State reset")
-        if os.path.exists(f"{LOCAL_STATE_FILE}.backup"):
-            os.remove(f"{LOCAL_STATE_FILE}.backup")
+        files_to_remove = [LOCAL_STATE_FILE, f"{LOCAL_STATE_FILE}.backup", 
+                          NOTIFICATIONS_FILE, LOG_FILE]
+        for file in files_to_remove:
+            if os.path.exists(file):
+                os.remove(file)
+        print("✅ All state files reset")
         return
 
     processor = CardTrackingProcessor(debug=args.debug)
 
-    if args.show_state:
+    if args.notifications:
+        notifications = processor.load_json_file(NOTIFICATIONS_FILE) or []
+        print(f"\n📱 {len(notifications)} notifications in queue")
+        for notif in notifications[-5:]:  # Show last 5
+            print(f"  {notif['customer_name']}: {notif['status']} - {notif['description']}")
+        return
+
+    if args.show_state or args.analytics:
         state = processor.load_json_file(LOCAL_STATE_FILE) or {}
-        processor.print_state_summary(state)
+        if args.analytics:
+            analytics = processor.generate_analytics(state)
+            print(json.dumps(analytics, indent=2, default=str))
+        else:
+            processor.print_state_summary(state)
         return
 
     if not args.input_file or not args.type:
@@ -454,10 +709,15 @@ def main():
 
     print(f"🚀 Processing {len(input_data)} records from {args.input_file}")
     final_state = processor.process_bulk_data(input_data, template)
+    
     if processor.save_json_file(LOCAL_STATE_FILE, final_state):
         processor.print_stats()
         processor.print_state_summary(final_state)
         print(f"\n✅ Done. State saved to {LOCAL_STATE_FILE}")
+        
+        # Show notification summary
+        if processor.stats["notifications_sent"] > 0:
+            print(f"📱 {processor.stats['notifications_sent']} notifications queued")
 
 
 if __name__ == "__main__":

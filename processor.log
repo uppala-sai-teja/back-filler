@@ -1,54 +1,14 @@
-2025-08-18 21:36:10,156 - ERROR - Invalid JSON in testcases/test_bank_data.json: Expecting value: line 1 column 1 (char 0)
-2025-08-18 23:21:30,046 - INFO - Starting bulk processing of 3 records
-2025-08-18 23:21:30,239 - ERROR - Error processing record 1: maximum recursion depth exceeded
-2025-08-18 23:21:30,308 - ERROR - Error processing record 2: maximum recursion depth exceeded
-2025-08-18 23:21:30,375 - ERROR - Error processing record 3: maximum recursion depth exceeded
-2025-08-18 23:21:30,379 - INFO - State saved successfully to local_db_state.json
-2025-08-18 23:22:33,346 - INFO - Starting bulk processing of 3 records
-2025-08-18 23:22:33,347 - ERROR - File not found: local_db_state.json
-2025-08-18 23:22:33,441 - ERROR - Error processing record 1: maximum recursion depth exceeded
-2025-08-18 23:22:33,522 - ERROR - Error processing record 2: maximum recursion depth exceeded
-2025-08-18 23:22:33,640 - ERROR - Error processing record 3: maximum recursion depth exceeded
-2025-08-18 23:22:33,642 - INFO - State saved successfully to local_db_state.json
-2025-08-19 00:45:24,322 - INFO - Starting processing of 3 records
-2025-08-19 00:45:24,323 - WARNING - File not found: local_db_state.json
-2025-08-19 00:45:24,408 - INFO - Created new customer: CUST_001
-2025-08-19 00:45:24,409 - INFO - Created new card: CARD_APP_001_1755544524
-2025-08-19 00:45:24,410 - INFO - Added event: APPLICATION_SUBMITTED to CARD_APP_001_1755544524
-2025-08-19 00:45:24,479 - INFO - Added event: APPLICATION_APPROVED to CARD_APP_001_1755544524
-2025-08-19 00:45:24,543 - INFO - Created new customer: CUST_002
-2025-08-19 00:45:24,544 - INFO - Created new card: CARD_APP_002_1755544524
-2025-08-19 00:45:24,544 - INFO - Added event: APPLICATION_SUBMITTED to CARD_APP_002_1755544524
-2025-08-19 00:45:24,546 - INFO - Saved data to local_db_state.json
-2025-08-19 00:46:59,107 - INFO - Starting processing of 2 records
-2025-08-19 00:46:59,146 - INFO - Added event: PRODUCTION_QUEUED to CARD_APP_001_1755544524
-2025-08-19 00:46:59,146 - INFO - Added event: PRODUCTION_STARTED to CARD_APP_001_1755544524
-2025-08-19 00:46:59,147 - INFO - Added event: CARD_EMBOSSING to CARD_APP_001_1755544524
-2025-08-19 00:46:59,147 - INFO - Added event: QUALITY_CHECK to CARD_APP_001_1755544524
-2025-08-19 00:46:59,147 - INFO - Added event: CARD_PERSONALIZED to CARD_APP_001_1755544524
-2025-08-19 00:46:59,148 - INFO - Added event: DISPATCHED to CARD_APP_001_1755544524
-2025-08-19 00:46:59,184 - INFO - Added event: PRODUCTION_QUEUED to CARD_APP_002_1755544524
-2025-08-19 00:46:59,185 - INFO - Added event: PRODUCTION_STARTED to CARD_APP_002_1755544524
-2025-08-19 00:46:59,189 - ERROR - Error saving local_db_state.json: [WinError 183] Cannot create a file when that file already exists: 'local_db_state.json' -> 'local_db_state.json.backup'
-2025-08-19 00:50:33,133 - INFO - Starting processing of 2 records
-2025-08-19 00:50:33,169 - INFO - Added event: PRODUCTION_QUEUED to CARD_APP_001_1755544524
-2025-08-19 00:50:33,169 - INFO - Added event: PRODUCTION_STARTED to CARD_APP_001_1755544524
-2025-08-19 00:50:33,170 - INFO - Added event: CARD_EMBOSSING to CARD_APP_001_1755544524
-2025-08-19 00:50:33,170 - INFO - Added event: QUALITY_CHECK to CARD_APP_001_1755544524
-2025-08-19 00:50:33,170 - INFO - Added event: CARD_PERSONALIZED to CARD_APP_001_1755544524
-2025-08-19 00:50:33,171 - INFO - Added event: DISPATCHED to CARD_APP_001_1755544524
-2025-08-19 00:50:33,201 - INFO - Added event: PRODUCTION_QUEUED to CARD_APP_002_1755544524
-2025-08-19 00:50:33,201 - INFO - Added event: PRODUCTION_STARTED to CARD_APP_002_1755544524
-2025-08-19 00:50:33,202 - ERROR - Error saving local_db_state.json: [WinError 183] Cannot create a file when that file already exists: 'local_db_state.json' -> 'local_db_state.json.backup'
-2025-08-19 06:18:04,740 - WARNING - File not found: local_db_state.json
-2025-08-19 06:18:04,905 - INFO - Saved data to local_db_state.json
-2025-08-19 06:19:23,742 - INFO - Saved data to local_db_state.json
-2025-08-19 06:26:59,224 - INFO - Saved data to local_db_state.json
-2025-08-19 06:28:06,764 - WARNING - File not found: local_db_state.json
-2025-08-19 06:28:06,933 - INFO - Saved data to local_db_state.json
-2025-08-19 06:28:48,142 - INFO - Saved data to local_db_state.json
-2025-08-19 06:31:40,806 - INFO - Saved data to local_db_state.json
-2025-08-19 06:35:01,140 - INFO - Saved data to local_db_state.json
-2025-08-19 06:49:59,541 - INFO - Saved data to local_db_state.json
-2025-08-19 06:52:52,171 - WARNING - Could not normalize phone: invalid_phone
-2025-08-19 06:52:52,283 - INFO - Saved data to local_db_state.json
+2025-08-19 10:27:29,888 - WARNING - File not found: local_db_state.json
+2025-08-19 10:27:30,059 - WARNING - File not found: notifications.json
+2025-08-19 10:27:30,060 - INFO - Saved data to notifications.json
+2025-08-19 10:27:30,061 - INFO - Saved data to local_db_state.json
+2025-08-19 10:29:58,266 - INFO - Saved data to notifications.json
+2025-08-19 10:29:58,267 - INFO - Saved data to local_db_state.json
+2025-08-19 10:31:20,508 - INFO - Saved data to notifications.json
+2025-08-19 10:31:20,509 - INFO - Saved data to local_db_state.json
+2025-08-19 10:36:12,991 - INFO - Saved data to notifications.json
+2025-08-19 10:36:12,993 - INFO - Saved data to local_db_state.json
+2025-08-19 10:37:21,868 - WARNING - Could not normalize phone: invalid_phone
+2025-08-19 10:37:21,870 - ERROR - Validation errors: ['Missing required field: customer_id', 'Invalid mobile format: invalid_phone']
+2025-08-19 10:37:21,987 - INFO - Saved data to notifications.json
+2025-08-19 10:37:21,989 - INFO - Saved data to local_db_state.json

@@ -8,7 +8,7 @@
     },
     "cards": [
       {
-        "card_id": "CARD_APP_001_1755584886",
+        "card_id": "CARD_APP_001_1755599249",
         "tracking_ids": {
           "application_id": "APP_001",
           "customer_id": "CUST_001",
@@ -41,7 +41,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": null
+                "batch_number": null,
+                "estimated_delivery": null
               }
             },
             {
@@ -54,7 +55,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": null
+                "batch_number": null,
+                "estimated_delivery": "2025-08-25T10:27:30.005358Z"
               }
             }
           ],
@@ -69,7 +71,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": "BATCH_2025_08_001"
+                "batch_number": "BATCH_2025_08_001",
+                "estimated_delivery": "2025-08-23T10:29:58.245358Z"
               }
             },
             {
@@ -82,7 +85,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": "BATCH_2025_08_001"
+                "batch_number": "BATCH_2025_08_001",
+                "estimated_delivery": "2025-08-23T10:29:58.245430Z"
               }
             },
             {
@@ -95,7 +99,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": "BATCH_2025_08_001"
+                "batch_number": "BATCH_2025_08_001",
+                "estimated_delivery": null
               }
             },
             {
@@ -108,7 +113,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": "BATCH_2025_08_001"
+                "batch_number": "BATCH_2025_08_001",
+                "estimated_delivery": null
               }
             },
             {
@@ -121,7 +127,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": "BATCH_2025_08_001"
+                "batch_number": "BATCH_2025_08_001",
+                "estimated_delivery": "2025-08-22T10:29:58.245514Z"
               }
             }
           ],
@@ -136,7 +143,8 @@
               "metadata": {
                 "courier_partner": "DTDC",
                 "tracking_number": "DTDC123456789",
-                "batch_number": "BATCH_2025_08_001"
+                "batch_number": "BATCH_2025_08_001",
+                "estimated_delivery": "2025-08-21T10:29:58.245538Z"
               }
             },
             {
@@ -149,7 +157,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": null
+                "batch_number": null,
+                "estimated_delivery": null
               }
             },
             {
@@ -162,7 +171,22 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": null
+                "batch_number": null,
+                "estimated_delivery": "2025-08-20T10:31:20.507374Z"
+              }
+            },
+            {
+              "status": "IN_TRANSIT",
+              "stage": "shipping_and_delivery",
+              "timestamp": "2025-08-18T08:00:00Z",
+              "description": "Package in transit",
+              "location": "Mumbai Hub",
+              "provider": "Logistics Partner",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null,
+                "estimated_delivery": "2025-08-20T10:31:20.507409Z"
               }
             },
             {
@@ -175,7 +199,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": null
+                "batch_number": null,
+                "estimated_delivery": "2025-08-19T10:31:20.507434Z"
               }
             },
             {
@@ -188,22 +213,25 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": null
+                "batch_number": null,
+                "estimated_delivery": null
               }
             }
           ]
         },
         "delivery_info": {},
+        "estimated_delivery": "2025-08-19T10:31:20.507434Z",
         "metadata": {
-          "created_at": "2025-08-19T06:28:06.825378Z",
-          "last_updated": "2025-08-19T06:31:40.805466Z",
-          "priority": "standard"
+          "created_at": "2025-08-19T10:27:29.949909Z",
+          "last_updated": "2025-08-19T10:31:20.507470Z",
+          "priority": "standard",
+          "alerts": []
         }
       }
     ],
     "metadata": {
-      "created_at": "2025-08-19T06:28:06.825373Z",
-      "last_updated": "2025-08-19T06:31:40.805466Z"
+      "created_at": "2025-08-19T10:27:29.949905Z",
+      "last_updated": "2025-08-19T10:31:20.507470Z"
     }
   },
   "CUST_002": {
@@ -215,7 +243,7 @@
     },
     "cards": [
       {
-        "card_id": "CARD_APP_002_1755584886",
+        "card_id": "CARD_APP_002_1755599250",
         "tracking_ids": {
           "application_id": "APP_002",
           "customer_id": "CUST_002",
@@ -230,11 +258,11 @@
           "card_purpose": "new_application"
         },
         "current_status": {
-          "status": "APPLICATION_PROCESSING",
-          "stage": "application_and_approval",
-          "location": "Unknown",
-          "last_updated": "2025-08-16T10:10:00Z",
-          "description": "Application under review"
+          "status": "PRODUCTION_STARTED",
+          "stage": "card_production",
+          "location": "Mumbai Production Unit",
+          "last_updated": "2025-08-17T11:00:00Z",
+          "description": "Card production in progress"
         },
         "timeline": {
           "application_and_approval": [
@@ -248,20 +276,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": null
-              }
-            },
-            {
-              "status": "APPLICATION_PROCESSING",
-              "stage": "application_and_approval",
-              "timestamp": "2025-08-16T10:10:00Z",
-              "description": "Application under review",
-              "location": "Unknown",
-              "provider": "Bank",
-              "metadata": {
-                "courier_partner": null,
-                "tracking_number": null,
-                "batch_number": null
+                "batch_number": null,
+                "estimated_delivery": null
               }
             }
           ],
@@ -276,7 +292,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": "BATCH_2025_08_002"
+                "batch_number": "BATCH_2025_08_002",
+                "estimated_delivery": "2025-08-23T10:29:58.266215Z"
               }
             },
             {
@@ -289,23 +306,26 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": "BATCH_2025_08_002"
+                "batch_number": "BATCH_2025_08_002",
+                "estimated_delivery": "2025-08-23T10:29:58.266263Z"
               }
             }
           ],
           "shipping_and_delivery": []
         },
         "delivery_info": {},
+        "estimated_delivery": "2025-08-23T10:29:58.266263Z",
         "metadata": {
-          "created_at": "2025-08-19T06:28:06.933257Z",
-          "last_updated": "2025-08-19T06:35:01.139927Z",
-          "priority": "standard"
+          "created_at": "2025-08-19T10:27:30.059887Z",
+          "last_updated": "2025-08-19T10:29:58.266274Z",
+          "priority": "standard",
+          "alerts": []
         }
       }
     ],
     "metadata": {
-      "created_at": "2025-08-19T06:28:06.933248Z",
-      "last_updated": "2025-08-19T06:35:01.139927Z"
+      "created_at": "2025-08-19T10:27:30.059882Z",
+      "last_updated": "2025-08-19T10:29:58.266274Z"
     }
   },
   "CUST_003": {
@@ -317,7 +337,7 @@
     },
     "cards": [
       {
-        "card_id": "CARD_APP_003_1755586199",
+        "card_id": "CARD_APP_003_1755599772",
         "tracking_ids": {
           "application_id": "APP_003",
           "customer_id": "CUST_003",
@@ -350,7 +370,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": null
+                "batch_number": null,
+                "estimated_delivery": "2025-08-25T10:36:12.884922Z"
               }
             }
           ],
@@ -358,14 +379,16 @@
           "shipping_and_delivery": []
         },
         "delivery_info": {},
+        "estimated_delivery": "2025-08-25T10:36:12.884922Z",
         "metadata": {
-          "created_at": "2025-08-19T06:49:59.433461Z",
-          "last_updated": "2025-08-19T06:49:59.433472Z",
-          "priority": "standard"
+          "created_at": "2025-08-19T10:36:12.885069Z",
+          "last_updated": "2025-08-19T10:36:12.885116Z",
+          "priority": "standard",
+          "alerts": []
         }
       },
       {
-        "card_id": "CARD_APP_004_1755586199",
+        "card_id": "CARD_APP_004_1755599772",
         "tracking_ids": {
           "application_id": "APP_004",
           "customer_id": "CUST_003",
@@ -398,7 +421,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": null
+                "batch_number": null,
+                "estimated_delivery": null
               }
             }
           ],
@@ -406,16 +430,18 @@
           "shipping_and_delivery": []
         },
         "delivery_info": {},
+        "estimated_delivery": null,
         "metadata": {
-          "created_at": "2025-08-19T06:49:59.487304Z",
-          "last_updated": "2025-08-19T06:49:59.487315Z",
-          "priority": "standard"
+          "created_at": "2025-08-19T10:36:12.939656Z",
+          "last_updated": "2025-08-19T10:36:12.939672Z",
+          "priority": "standard",
+          "alerts": []
         }
       }
     ],
     "metadata": {
-      "created_at": "2025-08-19T06:49:59.433454Z",
-      "last_updated": "2025-08-19T06:49:59.487315Z"
+      "created_at": "2025-08-19T10:36:12.885064Z",
+      "last_updated": "2025-08-19T10:36:12.939672Z"
     }
   },
   "CUST_004": {
@@ -427,7 +453,7 @@
     },
     "cards": [
       {
-        "card_id": "CARD_APP_005_1755586199",
+        "card_id": "CARD_APP_005_1755599772",
         "tracking_ids": {
           "application_id": "APP_005",
           "customer_id": "CUST_004",
@@ -460,7 +486,8 @@
               "metadata": {
                 "courier_partner": null,
                 "tracking_number": null,
-                "batch_number": null
+                "batch_number": null,
+                "estimated_delivery": null
               }
             }
           ],
@@ -468,16 +495,18 @@
           "shipping_and_delivery": []
         },
         "delivery_info": {},
+        "estimated_delivery": null,
         "metadata": {
-          "created_at": "2025-08-19T06:49:59.539835Z",
-          "last_updated": "2025-08-19T06:49:59.539843Z",
-          "priority": "standard"
+          "created_at": "2025-08-19T10:36:12.990973Z",
+          "last_updated": "2025-08-19T10:36:12.990986Z",
+          "priority": "standard",
+          "alerts": []
         }
       }
     ],
     "metadata": {
-      "created_at": "2025-08-19T06:49:59.539830Z",
-      "last_updated": "2025-08-19T06:49:59.539843Z"
+      "created_at": "2025-08-19T10:36:12.990968Z",
+      "last_updated": "2025-08-19T10:36:12.990986Z"
     }
   }
 }
