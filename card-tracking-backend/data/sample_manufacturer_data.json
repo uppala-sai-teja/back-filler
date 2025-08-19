@@ -1,0 +1,60 @@
+[
+  {
+    "bank_reference": "APP_001",
+    "order_id": "MFG_ORDER_001",
+    "batch_number": "BATCH_2025_08_001",
+    "facility": "Chennai Production Unit",
+    "production_history": [
+      {
+        "status": "received",
+        "timestamp": "2025-08-16T08:00:00Z",
+        "location": "Chennai Production Unit"
+      },
+      {
+        "status": "in_production",
+        "timestamp": "2025-08-16T10:00:00Z",
+        "location": "Chennai Production Unit"
+      },
+      {
+        "status": "embossing",
+        "timestamp": "2025-08-16T14:00:00Z",
+        "location": "Chennai Production Unit"
+      },
+      {
+        "status": "quality_check",
+        "timestamp": "2025-08-16T16:00:00Z",
+        "location": "Chennai Production Unit"
+      },
+      {
+        "status": "completed",
+        "timestamp": "2025-08-16T18:00:00Z",
+        "location": "Chennai Production Unit"
+      },
+      {
+        "status": "dispatched",
+        "timestamp": "2025-08-17T09:00:00Z",
+        "location": "Chennai Hub",
+        "courier_partner": "DTDC",
+        "tracking_number": "DTDC123456789"
+      }
+    ]
+  },
+  {
+    "bank_reference": "APP_002",
+    "order_id": "MFG_ORDER_002",
+    "batch_number": "BATCH_2025_08_002",
+    "facility": "Mumbai Production Unit",
+    "production_history": [
+      {
+        "status": "received",
+        "timestamp": "2025-08-17T09:00:00Z",
+        "location": "Mumbai Production Unit"
+      },
+      {
+        "status": "in_production",
+        "timestamp": "2025-08-17T11:00:00Z",
+        "location": "Mumbai Production Unit"
+      }
+    ]
+  }
+]

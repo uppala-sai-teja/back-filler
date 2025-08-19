@@ -27,10 +27,6 @@ class CardTrackingProcessor:
         
     def setup_logging(self, debug):
         level = logging.DEBUG if debug else logging.INFO
-        
-        # Ensure logs directory exists
-        os.makedirs('logs', exist_ok=True)
-        
         logging.basicConfig(
             level=level,
             format='%(asctime)s - %(levelname)s - %(message)s',
@@ -84,9 +80,7 @@ class CardTrackingProcessor:
             "%Y-%m-%dT%H:%M:%S.%fZ",
             "%Y-%m-%d %H:%M:%S",
             "%d-%m-%Y %H:%M:%S",
-            "%Y-%m-%d",
-            "%d/%m/%Y",
-            "%m/%d/%Y"
+            "%Y-%m-%d"
         ]
         for pattern in patterns:
             try:
@@ -317,7 +311,7 @@ class CardTrackingProcessor:
                 card["estimated_delivery"] = estimated
 
         # Update tracking IDs
-        provider_type = template.get("provider_type") if 'template' in locals() else data.get("provider_type")
+        provider_type = data.get("provider_type")
         if provider_type == "card_manufacturer" and data.get("manufacturer_order_id"):
             card["tracking_ids"]["manufacturer_order_id"] = data["manufacturer_order_id"]
         elif provider_type == "logistics" and data.get("logistics_tracking_number"):
@@ -398,7 +392,7 @@ class CardTrackingProcessor:
         
         return True
 
-    # Analytics and Reporting
+    # Analytics
     def print_stats(self):
         """Print processing statistics"""
         print(f"\n📊 Processing Stats:")
@@ -409,28 +403,15 @@ class CardTrackingProcessor:
         """Print analytics from MongoDB"""
         print(f"\n📈 Analytics:")
         
-        # Get total counts
-        total_customers = self.db_manager.customers_collection.count_documents({})
-        print(f"Total Customers: {total_customers}")
-        
         # Status summary
         status_summary = self.db_manager.get_status_summary()
-        if status_summary:
-            print(f"\n📊 Status Breakdown:")
-            for status, count in status_summary.items():
-                print(f"  {status}: {count}")
+        print(f"Status Breakdown:")
+        for status, count in status_summary.items():
+            print(f"  {status}: {count}")
         
         # Bank performance
         bank_performance = self.db_manager.get_bank_performance()
-        if bank_performance:
-            print(f"\n🏦 Bank Performance:")
-            for bank, perf in bank_performance.items():
-                completion_rate = (perf["completed"] / perf["total"] * 100) if perf["total"] > 0 else 0
-                print(f"  {bank}: {perf['completed']}/{perf['total']} ({completion_rate:.1f}%)")
-
-    def show_notifications(self):
-        """Show pending notifications"""
-        notifications = self.db_manager.get_pending_notifications(20)
-        print(f"\n📱 {len(notifications)} pending notifications:")
-        for notif in notifications:
-            print(f"  {notif.get('customer_name', 'Unknown')}: {notif.get('status')} - {notif.get('description')}")
+        print(f"\n🏦 Bank Performance:")
+        for bank, perf in bank_performance.items():
+            completion_rate = (perf["completed"] / perf["total"] * 100) if perf["total"] > 0 else 0
+            print(f"  {bank}: {perf['completed']}/{perf['total']} ({completion_rate:.1f}%)")
