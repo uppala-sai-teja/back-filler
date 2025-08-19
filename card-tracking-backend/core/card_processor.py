@@ -1,4 +1,4 @@
-# core/card_processor.py
+# core/card_processor.py - Updated with pending stages support
 import json
 import logging
 import re
@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 from jsonpath_ng import parse
 from typing import Dict, List, Optional, Generator
 from .mongodb_manager import MongoDBManager
+
+# Global stage order definition
+STAGE_ORDER = ["application_and_approval", "card_production", "shipping_and_delivery"]
 
 # Required fields for validation
 REQUIRED_FIELDS = {
@@ -27,6 +30,10 @@ class CardTrackingProcessor:
         
     def setup_logging(self, debug):
         level = logging.DEBUG if debug else logging.INFO
+        
+        # Ensure logs directory exists
+        os.makedirs('logs', exist_ok=True)
+        
         logging.basicConfig(
             level=level,
             format='%(asctime)s - %(levelname)s - %(message)s',
@@ -60,6 +67,21 @@ class CardTrackingProcessor:
             self.logger.error(f"Error loading template: {e}")
             return None
 
+    # Stage and Status Management
+    def calculate_pending_stages(self, current_stage: str) -> List[str]:
+        """Calculate pending stages based on current stage"""
+        try:
+            current_index = STAGE_ORDER.index(current_stage)
+            return STAGE_ORDER[current_index + 1:]
+        except (ValueError, IndexError):
+            return STAGE_ORDER.copy()
+    
+    def update_card_pending_stages(self, card: Dict) -> Dict:
+        """Update pending stages for a card"""
+        current_stage = card.get("current_status", {}).get("stage", "")
+        card["pending_stages"] = self.calculate_pending_stages(current_stage)
+        return card
+
     # Data Processing
     def normalize_phone_number(self, phone: str) -> str:
         """Normalize phone number to +91XXXXXXXXXX format"""
@@ -83,7 +105,9 @@ class CardTrackingProcessor:
             "%Y-%m-%dT%H:%M:%S.%fZ",
             "%Y-%m-%d %H:%M:%S",
             "%d-%m-%Y %H:%M:%S",
-            "%Y-%m-%d"
+            "%Y-%m-%d",
+            "%d/%m/%Y",
+            "%m/%d/%Y"
         ]
         for pattern in patterns:
             try:
@@ -219,13 +243,13 @@ class CardTrackingProcessor:
         return customer
 
     def create_new_card(self, data: Dict, template: Dict) -> Dict:
-        """Create new card record"""
+        """Create new card record with pending stages"""
         timestamp = datetime.now().isoformat() + "Z"
         bank_label = (template.get("provider_name", "Bank") 
                      if template.get("provider_type") == "bank" 
                      else (data.get("bank_name") or "Bank"))
         
-        return {
+        card = {
             "card_id": f"CARD_{data.get('application_id', 'UNK')}_{int(datetime.now().timestamp())}",
             "tracking_ids": {
                 "application_id": data.get("application_id"),
@@ -247,6 +271,7 @@ class CardTrackingProcessor:
                 "shipping_and_delivery": []
             },
             "estimated_delivery": None,
+            "pending_stages": STAGE_ORDER.copy(),  # Initially all stages are pending
             "application_metadata": {
                 "courier_partner": None,
                 "current_tracking_number": None,
@@ -259,9 +284,11 @@ class CardTrackingProcessor:
                 "last_updated": timestamp
             }
         }
+        
+        return card
 
     def update_card_with_event(self, customer: Dict, card: Dict, data: Dict, timeline_event: Dict) -> bool:
-        """Update card with new timeline event"""
+        """Update card with new timeline event and pending stages"""
         # Find card index in customer's cards
         card_index = None
         for i, c in enumerate(customer.get("cards", [])):
@@ -297,6 +324,9 @@ class CardTrackingProcessor:
             "description": timeline_event["description"]
         }
 
+        # Update pending stages based on new current stage
+        card = self.update_card_pending_stages(card)
+
         # Update metadata
         app_metadata = card["application_metadata"]
         if data.get("courier_partner"):
@@ -314,7 +344,7 @@ class CardTrackingProcessor:
                 card["estimated_delivery"] = estimated
 
         # Update tracking IDs
-        provider_type = data.get("provider_type")
+        provider_type = data.get("provider_type") 
         if provider_type == "card_manufacturer" and data.get("manufacturer_order_id"):
             card["tracking_ids"]["manufacturer_order_id"] = data["manufacturer_order_id"]
         elif provider_type == "logistics" and data.get("logistics_tracking_number"):
@@ -323,6 +353,7 @@ class CardTrackingProcessor:
         # Handle completion
         if timeline_event["status"] in ["DELIVERED", "APPLICATION_REJECTED", "RETURNED_TO_SENDER"]:
             card["tracking_status"] = "completed"
+            card["pending_stages"] = []  # No more pending stages
 
         # Update timestamps
         now = datetime.now().isoformat() + "Z"
@@ -352,6 +383,9 @@ class CardTrackingProcessor:
                     if not timeline_event:
                         continue
                     
+                    # Add provider_type to processed_data for tracking ID updates
+                    processed_data["provider_type"] = provider_type
+                    
                     # Find or create customer and card
                     if provider_type == "bank":
                         customer_id = processed_data.get("customer_id")
@@ -373,9 +407,9 @@ class CardTrackingProcessor:
                         # For manufacturer/logistics, find by tracking ID
                         lookup_key = template.get("lookup_key")
                         lookup_value = processed_data.get(lookup_key)
-
-                        self.logger.debug(f"Looking for {lookup_key}: {lookup_value}")
-                        self.logger.debug(f"Processed data: {processed_data}")
+                        
+                        if self.debug:
+                            self.logger.debug(f"Looking for {lookup_key}: {lookup_value}")
                         
                         card, customer_id = self.db_manager.find_card_by_tracking_id(lookup_key, lookup_value)
                         if not card:
@@ -398,7 +432,38 @@ class CardTrackingProcessor:
         
         return True
 
-    # Analytics
+    # Utility Methods for Enhanced Features
+    def get_cards_without_manufacturer_order_id(self) -> List[str]:
+        """Get application IDs for cards that need manufacturer updates"""
+        application_ids = []
+        customers = list(self.db_manager.customers_collection.find())
+        
+        for customer in customers:
+            for card in customer.get("cards", []):
+                tracking_ids = card.get("tracking_ids", {})
+                if (tracking_ids.get("application_id") and 
+                    not tracking_ids.get("manufacturer_order_id")):
+                    application_ids.append(tracking_ids["application_id"])
+        
+        return application_ids
+    
+    def get_tracking_numbers_for_active_shipments(self) -> List[str]:
+        """Get tracking numbers for cards that are not yet delivered"""
+        tracking_numbers = []
+        customers = list(self.db_manager.customers_collection.find())
+        
+        for customer in customers:
+            for card in customer.get("cards", []):
+                current_status = card.get("current_status", {}).get("status")
+                tracking_number = card.get("tracking_ids", {}).get("logistics_tracking_number")
+                
+                if (tracking_number and 
+                    current_status not in ["DELIVERED", "RETURNED_TO_SENDER"]):
+                    tracking_numbers.append(tracking_number)
+        
+        return tracking_numbers
+
+    # Analytics and Reporting
     def print_stats(self):
         """Print processing statistics"""
         print(f"\n📊 Processing Stats:")
@@ -409,15 +474,120 @@ class CardTrackingProcessor:
         """Print analytics from MongoDB"""
         print(f"\n📈 Analytics:")
         
+        # Get total counts
+        total_customers = self.db_manager.customers_collection.count_documents({})
+        print(f"Total Customers: {total_customers}")
+        
+        # Count total cards and pending stages summary
+        pipeline = [
+            {"$unwind": "$cards"},
+            {"$group": {
+                "_id": None,
+                "total_cards": {"$sum": 1},
+                "active_cards": {
+                    "$sum": {
+                        "$cond": [{"$eq": ["$cards.tracking_status", "active"]}, 1, 0]
+                    }
+                },
+                "completed_cards": {
+                    "$sum": {
+                        "$cond": [{"$eq": ["$cards.tracking_status", "completed"]}, 1, 0]
+                    }
+                }
+            }}
+        ]
+        
+        card_summary = list(self.db_manager.customers_collection.aggregate(pipeline))
+        if card_summary:
+            summary = card_summary[0]
+            print(f"Total Cards: {summary.get('total_cards', 0)}")
+            print(f"Active Cards: {summary.get('active_cards', 0)}")
+            print(f"Completed Cards: {summary.get('completed_cards', 0)}")
+        
         # Status summary
         status_summary = self.db_manager.get_status_summary()
-        print(f"Status Breakdown:")
-        for status, count in status_summary.items():
-            print(f"  {status}: {count}")
+        if status_summary:
+            print(f"\n📊 Status Breakdown:")
+            for status, count in status_summary.items():
+                print(f"  {status}: {count}")
+        
+        # Stage summary
+        stage_pipeline = [
+            {"$unwind": "$cards"},
+            {"$group": {
+                "_id": "$cards.current_status.stage",
+                "count": {"$sum": 1}
+            }},
+            {"$sort": {"count": -1}}
+        ]
+        
+        stage_summary = list(self.db_manager.customers_collection.aggregate(stage_pipeline))
+        if stage_summary:
+            print(f"\n📋 Stage Breakdown:")
+            for item in stage_summary:
+                stage = item["_id"] or "Unknown"
+                count = item["count"]
+                print(f"  {stage}: {count}")
+        
+        # Pending stages summary
+        pending_pipeline = [
+            {"$unwind": "$cards"},
+            {"$unwind": "$cards.pending_stages"},
+            {"$group": {
+                "_id": "$cards.pending_stages",
+                "count": {"$sum": 1}
+            }},
+            {"$sort": {"count": -1}}
+        ]
+        
+        pending_summary = list(self.db_manager.customers_collection.aggregate(pending_pipeline))
+        if pending_summary:
+            print(f"\n⏳ Pending Stages Summary:")
+            for item in pending_summary:
+                pending_stage = item["_id"]
+                count = item["count"]
+                print(f"  {pending_stage}: {count} cards")
         
         # Bank performance
         bank_performance = self.db_manager.get_bank_performance()
-        print(f"\n🏦 Bank Performance:")
-        for bank, perf in bank_performance.items():
-            completion_rate = (perf["completed"] / perf["total"] * 100) if perf["total"] > 0 else 0
-            print(f"  {bank}: {perf['completed']}/{perf['total']} ({completion_rate:.1f}%)")
+        if bank_performance:
+            print(f"\n🏦 Bank Performance:")
+            for bank, perf in bank_performance.items():
+                completion_rate = (perf["completed"] / perf["total"] * 100) if perf["total"] > 0 else 0
+                print(f"  {bank}: {perf['completed']}/{perf['total']} ({completion_rate:.1f}%)")
+
+    def show_notifications(self):
+        """Show pending notifications"""
+        notifications = self.db_manager.get_pending_notifications(20)
+        print(f"\n📱 {len(notifications)} pending notifications:")
+        for notif in notifications:
+            print(f"  {notif.get('customer_name', 'Unknown')}: {notif.get('status')} - {notif.get('description')}")
+    
+    def show_pending_stages_summary(self):
+        """Show detailed pending stages analysis"""
+        print(f"\n⏳ Detailed Pending Stages Analysis:")
+        
+        customers = list(self.db_manager.customers_collection.find())
+        stage_details = {stage: [] for stage in STAGE_ORDER}
+        
+        for customer in customers:
+            for card in customer.get("cards", []):
+                pending_stages = card.get("pending_stages", [])
+                application_id = card.get("tracking_ids", {}).get("application_id", "Unknown")
+                customer_name = customer.get("customer_info", {}).get("name", "Unknown")
+                
+                for pending_stage in pending_stages:
+                    if pending_stage in stage_details:
+                        stage_details[pending_stage].append({
+                            "application_id": application_id,
+                            "customer": customer_name,
+                            "current_status": card.get("current_status", {}).get("status", "Unknown")
+                        })
+        
+        for stage, cards in stage_details.items():
+            if cards:
+                print(f"\n  {stage} ({len(cards)} cards pending):")
+                for card_info in cards[:5]:  # Show first 5
+                    print(f"    - {card_info['application_id']} ({card_info['customer']}) - {card_info['current_status']}")
+                if len(cards) > 5:
+                    print(f"    ... and {len(cards) - 5} more")
