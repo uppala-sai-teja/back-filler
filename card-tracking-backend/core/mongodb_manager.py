@@ -3,7 +3,7 @@ import os
 import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
-from pymongo import MongoClient, ASCENDING, DESCENDING
+from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, DuplicateKeyError
 from dotenv import load_dotenv
 
@@ -54,18 +54,17 @@ class MongoDBManager:
         """Create necessary indexes for performance"""
         try:
             # Customer collection indexes
-            self.customers_collection.create_index("_id", unique=True)
             self.customers_collection.create_index("customer_info.email")
             self.customers_collection.create_index("customer_info.mobile")
             self.customers_collection.create_index("cards.tracking_ids.application_id")
             self.customers_collection.create_index("cards.tracking_ids.logistics_tracking_number")
             self.customers_collection.create_index("cards.current_status.status")
-            self.customers_collection.create_index("metadata.last_updated", DESCENDING)
+            self.customers_collection.create_index([("metadata.last_updated", -1)])  # -1 for descending
             
             # Notifications collection indexes
             self.notifications_collection.create_index("customer_id")
             self.notifications_collection.create_index("sent")
-            self.notifications_collection.create_index("timestamp", DESCENDING)
+            self.notifications_collection.create_index([("timestamp", -1)])  # -1 for descending
             
             self.logger.info("✅ Created MongoDB indexes")
             
@@ -194,7 +193,7 @@ class MongoDBManager:
         try:
             return list(self.notifications_collection.find(
                 {"sent": False}
-            ).limit(limit).sort("created_at", ASCENDING))
+            ).limit(limit).sort("created_at", 1))  # 1 for ascending
             
         except Exception as e:
             self.logger.error(f"Error getting pending notifications: {e}")

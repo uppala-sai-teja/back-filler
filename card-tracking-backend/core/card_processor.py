@@ -39,8 +39,11 @@ class CardTrackingProcessor:
 
     def __del__(self):
         """Cleanup MongoDB connection"""
-        if hasattr(self, 'db_manager'):
-            self.db_manager.disconnect()
+        try:
+            if hasattr(self, 'db_manager') and self.db_manager:
+                self.db_manager.disconnect()
+        except:
+            pass  # Ignore cleanup errors during shutdown
 
     # Configuration
     def get_template(self, provider_type: str) -> Optional[Dict]:
@@ -370,6 +373,9 @@ class CardTrackingProcessor:
                         # For manufacturer/logistics, find by tracking ID
                         lookup_key = template.get("lookup_key")
                         lookup_value = processed_data.get(lookup_key)
+
+                        self.logger.debug(f"Looking for {lookup_key}: {lookup_value}")
+                        self.logger.debug(f"Processed data: {processed_data}")
                         
                         card, customer_id = self.db_manager.find_card_by_tracking_id(lookup_key, lookup_value)
                         if not card:

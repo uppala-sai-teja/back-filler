@@ -99,7 +99,7 @@
     "default": {
       "provider_name": "Logistics Partner",
       "provider_type": "logistics",
-      "lookup_key": "logistics_tracking_number",
+      "lookup_key": "awb_number",
       "history_field": "tracking_history",
       "field_mappings": {
         "logistics_tracking_number": "awb_number",
