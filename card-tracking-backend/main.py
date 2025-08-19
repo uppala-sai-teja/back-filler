@@ -19,6 +19,152 @@ class EnhancedCardTrackingSystem:
         self.processor = CardTrackingProcessor(debug)
         self.debug = debug
         self.last_poll_times = self.load_poll_times()
+    
+    def simulate_bank_api_call_existing(self, application_ids: List[str]) -> List[Dict]:
+        """Simulate GET /applications/bulk for existing applications"""
+        print(f"Simulating bank API call for {len(application_ids)} existing applications...")
+        
+        # Simulate updated statuses for existing applications
+        simulated_updates = []
+        for app_id in application_ids:
+            # Randomly simulate some status updates
+            import random
+            statuses = ["submitted", "under_review", "approved", "rejected"]
+            current_status = random.choice(statuses)
+            
+            simulated_updates.append({
+                "application_id": app_id,
+                "status": current_status,
+                "last_updated": datetime.now().isoformat() + "Z",
+                "approval_date": datetime.now().isoformat() + "Z" if current_status == "approved" else None
+            })
+        
+        print(f"Retrieved status updates for {len(simulated_updates)} existing applications")
+        return simulated_updates
+    
+    def fetch_bank_applications(self, include_existing: bool = True) -> bool:
+        """Fetch new bank applications and optionally update existing ones"""
+        print("Fetching bank applications...")
+        
+        try:
+            success_count = 0
+            
+            # 1. Fetch new applications (existing functionality)
+            since = self.last_poll_times.get("bank")
+            new_applications = self.simulate_bank_api_call(since)
+            
+            if new_applications:
+                template = self.processor.get_template("bank")
+                if not template:
+                    print("Could not load bank template")
+                    return False
+                
+                success = self.processor.process_bulk_data(new_applications, template)
+                if success:
+                    success_count += len(new_applications)
+                    print(f"Processed {len(new_applications)} new applications")
+            
+            # 2. Update existing applications (NEW FEATURE)
+            if include_existing:
+                existing_app_ids = self.processor.db_manager.get_all_application_ids()
+                if existing_app_ids:
+                    existing_updates = self.simulate_bank_api_call_existing(existing_app_ids)
+                    
+                    # Process existing application updates
+                    template = self.processor.get_template("bank")
+                    for update in existing_updates:
+                        # Find customer by application ID
+                        card, customer_id = self.processor.db_manager.find_card_by_tracking_id(
+                            "application_id", update["application_id"]
+                        )
+                        
+                        if card and customer_id:
+                            customer = self.processor.db_manager.get_customer(customer_id)
+                            
+                            # Create timeline event from update
+                            timeline_event = self.processor.create_timeline_event(update, template)
+                            if timeline_event:
+                                processed_data = update.copy()
+                                processed_data["provider_type"] = "bank"
+                                processed_data["timeline_event"] = timeline_event
+                                
+                                if self.processor.update_card_with_event(customer, card, processed_data, timeline_event):
+                                    success_count += 1
+                    
+                    print(f"Updated {len(existing_updates)} existing applications")
+            
+            # Update all cards with pending stages
+            self.update_all_pending_stages()
+            
+            # Update last poll time
+            self.last_poll_times["bank"] = datetime.now().isoformat() + "Z"
+            self.save_poll_times()
+            
+            print(f"Successfully processed {success_count} total applications")
+            self.processor.print_stats()
+            return True
+                
+        except Exception as e:
+            print(f"Error fetching bank applications: {e}")
+            return False
+    
+    def generate_track_sheet(self, save_to_db: bool = True) -> bool:
+        """Generate track_sheet.json and optionally save to database"""
+        print("Generating track sheet...")
+        
+        try:
+            track_sheet = {}
+            customers = list(self.processor.db_manager.customers_collection.find())
+            
+            for customer in customers:
+                customer_name = customer.get("customer_info", {}).get("name", "Unknown")
+                
+                for card in customer.get("cards", []):
+                    application_id = card.get("tracking_ids", {}).get("application_id")
+                    if not application_id:
+                        continue
+                    
+                    current_status_info = card.get("current_status", {})
+                    
+                    track_sheet[application_id] = {
+                        "customer": customer_name,
+                        "current_stage": current_status_info.get("stage", "unknown"),
+                        "current_status": current_status_info.get("status", "UNKNOWN"),
+                        "pending_stages": card.get("pending_stages", STAGE_ORDER.copy()),
+                        "last_updated": current_status_info.get("last_updated", card.get("metadata", {}).get("last_updated", "")),
+                        "card_type": card.get("card_info", {}).get("card_type", "Unknown"),
+                        "card_variant": card.get("card_info", {}).get("card_variant", "Unknown"),
+                        "estimated_delivery": card.get("estimated_delivery"),
+                        "tracking_ids": card.get("tracking_ids", {}),
+                        "application_metadata": card.get("application_metadata", {})
+                    }
+            
+            # Save to JSON file
+            with open('track_sheet.json', 'w') as f:
+                json.dump(track_sheet, f, indent=2, default=str)
+            
+            # Save to database
+            if save_to_db:
+                self.processor.db_manager.save_track_sheet(track_sheet, "standard")
+            
+            print(f"Generated track sheet with {len(track_sheet)} applications")
+            print(f"Saved to: track_sheet.json" + (" and database" if save_to_db else ""))
+            
+            # Print summary
+            stage_summary = {}
+            for app_data in track_sheet.values():
+                stage = app_data["current_stage"]
+                stage_summary[stage] = stage_summary.get(stage, 0) + 1
+            
+            print(f"\nTrack Sheet Summary:")
+            for stage, count in stage_summary.items():
+                print(f"  {stage}: {count} applications")
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error generating track sheet: {e}")
+            return False
         
     def load_poll_times(self) -> Dict:
         """Load last poll times for incremental fetching"""
@@ -141,47 +287,7 @@ class EnhancedCardTrackingSystem:
         
         print(f"✅ Retrieved tracking updates for {len(simulated_responses)} packages")
         return simulated_responses
-    
-    def fetch_bank_applications(self) -> bool:
-        """Fetch new bank applications and process them"""
-        print("🏦 Fetching new bank applications...")
-        
-        try:
-            # Get new applications from simulated API
-            since = self.last_poll_times.get("bank")
-            new_applications = self.simulate_bank_api_call(since)
-            
-            if not new_applications:
-                print("📭 No new applications found")
-                return True
-            
-            # Process new applications
-            template = self.processor.get_template("bank")
-            if not template:
-                print("❌ Could not load bank template")
-                return False
-            
-            success = self.processor.process_bulk_data(new_applications, template)
-            
-            if success:
-                # Update all cards with pending stages
-                self.update_all_pending_stages()
-                
-                # Update last poll time
-                self.last_poll_times["bank"] = datetime.now().isoformat() + "Z"
-                self.save_poll_times()
-                
-                print(f"✅ Successfully processed {len(new_applications)} new applications")
-                self.processor.print_stats()
-                return True
-            else:
-                print("❌ Failed to process bank applications")
-                return False
-                
-        except Exception as e:
-            print(f"❌ Error fetching bank applications: {e}")
-            return False
-    
+
     def fetch_manufacturer_data(self) -> bool:
         """Fetch manufacturer data for cards without manufacturer_order_id"""
         print("🏭 Fetching manufacturer data...")
@@ -305,8 +411,276 @@ class EnhancedCardTrackingSystem:
             if updated:
                 self.processor.db_manager.upsert_customer(customer)
     
-    def generate_track_sheet(self) -> bool:
-        """Generate track_sheet.json with summarized tracking data"""
+    def auto_generate_track_sheet(self, source: str = "auto") -> bool:
+        """Automatically generate and save track sheet after data changes"""
+        try:
+            track_sheet = {}
+            customers = list(self.processor.db_manager.customers_collection.find())
+            
+            for customer in customers:
+                customer_name = customer.get("customer_info", {}).get("name", "Unknown")
+                
+                for card in customer.get("cards", []):
+                    application_id = card.get("tracking_ids", {}).get("application_id")
+                    if not application_id:
+                        continue
+                    
+                    current_status_info = card.get("current_status", {})
+                    
+                    track_sheet[application_id] = {
+                        "customer": customer_name,
+                        "current_stage": current_status_info.get("stage", "unknown"),
+                        "current_status": current_status_info.get("status", "UNKNOWN"),
+                        "pending_stages": card.get("pending_stages", STAGE_ORDER.copy()),
+                        "last_updated": current_status_info.get("last_updated", card.get("metadata", {}).get("last_updated", "")),
+                        "card_type": card.get("card_info", {}).get("card_type", "Unknown"),
+                        "card_variant": card.get("card_info", {}).get("card_variant", "Unknown"),
+                        "estimated_delivery": card.get("estimated_delivery"),
+                        "tracking_ids": card.get("tracking_ids", {}),
+                        "application_metadata": card.get("application_metadata", {})
+                    }
+            
+            # Save to JSON file (always update the current track sheet)
+            with open('track_sheet.json', 'w') as f:
+                json.dump(track_sheet, f, indent=2, default=str)
+            
+            # Save to database with source information
+            self.processor.db_manager.save_track_sheet(track_sheet, f"auto_{source}")
+            
+            if self.debug:
+                print(f"🔄 Auto-updated track sheet with {len(track_sheet)} applications (source: {source})")
+            
+            return True
+            
+        except Exception as e:
+            if self.debug:
+                print(f"❌ Error auto-generating track sheet: {e}")
+            return False
+    
+    def process_file(self, input_file: str, provider_type: str) -> bool:
+        """Process input file and auto-update track sheet"""
+        if not os.path.exists(input_file):
+            print(f"❌ File not found: {input_file}")
+            return False
+
+        template = self.processor.get_template(provider_type)
+        if not template:
+            print(f"❌ Could not load template for {provider_type}")
+            return False
+
+        with open(input_file, 'r') as f:
+            input_data = json.load(f)
+
+        print(f"🚀 Processing {len(input_data)} records from {input_file}")
+        
+        success = self.processor.process_bulk_data(input_data, template)
+        
+        if success:
+            # Update all cards with pending stages
+            self.update_all_pending_stages()
+            
+            # Auto-generate track sheet after processing
+            self.auto_generate_track_sheet(f"file_{provider_type}")
+            
+            self.processor.print_stats()
+            self.processor.print_analytics()
+            print(f"✅ Processing completed successfully!")
+            print(f"📋 Track sheet automatically updated")
+            return True
+        else:
+            print(f"❌ Processing failed!")
+            return False
+    
+    def fetch_bank_applications(self, include_existing: bool = True) -> bool:
+        """Fetch new bank applications and optionally update existing ones"""
+        print("🏦 Fetching bank applications...")
+        
+        try:
+            success_count = 0
+            
+            # 1. Fetch new applications
+            since = self.last_poll_times.get("bank")
+            new_applications = self.simulate_bank_api_call(since)
+            
+            if new_applications:
+                template = self.processor.get_template("bank")
+                if not template:
+                    print("❌ Could not load bank template")
+                    return False
+                
+                success = self.processor.process_bulk_data(new_applications, template)
+                if success:
+                    success_count += len(new_applications)
+                    print(f"✅ Processed {len(new_applications)} new applications")
+            
+            # 2. Update existing applications
+            if include_existing:
+                existing_app_ids = self.processor.db_manager.get_all_application_ids()
+                if existing_app_ids:
+                    existing_updates = self.simulate_bank_api_call_existing(existing_app_ids)
+                    
+                    template = self.processor.get_template("bank")
+                    updated_count = 0
+                    
+                    for update in existing_updates:
+                        card, customer_id = self.processor.db_manager.find_card_by_tracking_id(
+                            "application_id", update["application_id"]
+                        )
+                        
+                        if card and customer_id:
+                            customer = self.processor.db_manager.get_customer(customer_id)
+                            
+                            timeline_event = self.processor.create_timeline_event(update, template)
+                            if timeline_event:
+                                processed_data = update.copy()
+                                processed_data["provider_type"] = "bank"
+                                processed_data["timeline_event"] = timeline_event
+                                
+                                if self.processor.update_card_with_event(customer, card, processed_data, timeline_event):
+                                    updated_count += 1
+                    
+                    success_count += updated_count
+                    print(f"✅ Updated {updated_count} existing applications")
+            
+            if success_count > 0:
+                # Update all cards with pending stages
+                self.update_all_pending_stages()
+                
+                # Auto-generate track sheet after fetching
+                self.auto_generate_track_sheet("fetch_bank")
+                
+                # Update last poll time
+                self.last_poll_times["bank"] = datetime.now().isoformat() + "Z"
+                self.save_poll_times()
+                
+                print(f"✅ Successfully processed {success_count} total applications")
+                print(f"📋 Track sheet automatically updated")
+                self.processor.print_stats()
+                return True
+            else:
+                print("📭 No new data to process")
+                return True
+                
+        except Exception as e:
+            print(f"❌ Error fetching bank applications: {e}")
+            return False
+    
+    def fetch_manufacturer_data(self) -> bool:
+        """Fetch manufacturer data for cards without manufacturer_order_id"""
+        print("🏭 Fetching manufacturer data...")
+        
+        try:
+            # Find cards that need manufacturer updates
+            cards_needing_updates = []
+            customers = list(self.processor.db_manager.customers_collection.find())
+            
+            for customer in customers:
+                for card in customer.get("cards", []):
+                    tracking_ids = card.get("tracking_ids", {})
+                    if (tracking_ids.get("application_id") and 
+                        not tracking_ids.get("manufacturer_order_id")):
+                        cards_needing_updates.append(tracking_ids["application_id"])
+            
+            if not cards_needing_updates:
+                print("📭 No cards need manufacturer updates")
+                return True
+            
+            print(f"🔍 Found {len(cards_needing_updates)} cards needing manufacturer updates")
+            
+            # Get manufacturer data from simulated API
+            manufacturer_data = self.simulate_manufacturer_api_call(cards_needing_updates)
+            
+            # Process manufacturer data
+            template = self.processor.get_template("card_manufacturer")
+            if not template:
+                print("❌ Could not load manufacturer template")
+                return False
+            
+            success = self.processor.process_bulk_data(manufacturer_data, template)
+            
+            if success:
+                # Update all cards with pending stages
+                self.update_all_pending_stages()
+                
+                # Auto-generate track sheet after processing
+                self.auto_generate_track_sheet("fetch_manufacturer")
+                
+                # Update last poll time
+                self.last_poll_times["manufacturer"] = datetime.now().isoformat() + "Z"
+                self.save_poll_times()
+                
+                print(f"✅ Successfully processed manufacturer data for {len(manufacturer_data)} cards")
+                print(f"📋 Track sheet automatically updated")
+                self.processor.print_stats()
+                return True
+            else:
+                print("❌ Failed to process manufacturer data")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error fetching manufacturer data: {e}")
+            return False
+    
+    def fetch_logistics_data(self) -> bool:
+        """Fetch logistics data for cards that are not yet delivered"""
+        print("🚚 Fetching logistics data...")
+        
+        try:
+            # Find cards that need logistics updates
+            tracking_numbers_needing_updates = []
+            customers = list(self.processor.db_manager.customers_collection.find())
+            
+            for customer in customers:
+                for card in customer.get("cards", []):
+                    current_status = card.get("current_status", {}).get("status")
+                    tracking_number = card.get("tracking_ids", {}).get("logistics_tracking_number")
+                    
+                    if (tracking_number and 
+                        current_status not in ["DELIVERED", "RETURNED_TO_SENDER"]):
+                        tracking_numbers_needing_updates.append(tracking_number)
+            
+            if not tracking_numbers_needing_updates:
+                print("📭 No packages need logistics updates")
+                return True
+            
+            print(f"🔍 Found {len(tracking_numbers_needing_updates)} packages needing logistics updates")
+            
+            # Get logistics data from simulated API
+            logistics_data = self.simulate_logistics_api_call(tracking_numbers_needing_updates)
+            
+            # Process logistics data
+            template = self.processor.get_template("logistics")
+            if not template:
+                print("❌ Could not load logistics template")
+                return False
+            
+            success = self.processor.process_bulk_data(logistics_data, template)
+            
+            if success:
+                # Update all cards with pending stages
+                self.update_all_pending_stages()
+                
+                # Auto-generate track sheet after processing
+                self.auto_generate_track_sheet("fetch_logistics")
+                
+                # Update last poll time
+                self.last_poll_times["logistics"] = datetime.now().isoformat() + "Z"
+                self.save_poll_times()
+                
+                print(f"✅ Successfully processed logistics data for {len(logistics_data)} packages")
+                print(f"📋 Track sheet automatically updated")
+                self.processor.print_stats()
+                return True
+            else:
+                print("❌ Failed to process logistics data")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error fetching logistics data: {e}")
+            return False
+    
+    def generate_track_sheet(self, save_to_db: bool = True) -> bool:
+        """Generate track_sheet.json and optionally save to database (manual generation)"""
         print("📋 Generating track sheet...")
         
         try:
@@ -336,12 +710,16 @@ class EnhancedCardTrackingSystem:
                         "application_metadata": card.get("application_metadata", {})
                     }
             
-            # Save track sheet
+            # Save to JSON file
             with open('track_sheet.json', 'w') as f:
                 json.dump(track_sheet, f, indent=2, default=str)
             
+            # Save to database
+            if save_to_db:
+                self.processor.db_manager.save_track_sheet(track_sheet, "manual")
+            
             print(f"✅ Generated track sheet with {len(track_sheet)} applications")
-            print(f"📁 Saved to: track_sheet.json")
+            print(f"📁 Saved to: track_sheet.json" + (" and database" if save_to_db else ""))
             
             # Print summary
             stage_summary = {}
@@ -358,7 +736,7 @@ class EnhancedCardTrackingSystem:
         except Exception as e:
             print(f"❌ Error generating track sheet: {e}")
             return False
-    
+
     def process_file(self, input_file: str, provider_type: str) -> bool:
         """Process input file (existing functionality)"""
         if not os.path.exists(input_file):
@@ -398,15 +776,19 @@ def main():
     parser.add_argument("--type", choices=['bank', 'card_manufacturer', 'logistics'], 
                        help="Type of data to process")
     
-    # New API fetching arguments
+    # Enhanced API fetching arguments
     parser.add_argument("--fetch-bank", action="store_true", 
-                       help="Fetch new bank applications")
+                       help="Fetch new bank applications and update existing ones")
+    parser.add_argument("--fetch-bank-new-only", action="store_true", 
+                       help="Fetch only new bank applications (not existing)")
     parser.add_argument("--fetch-manufacturer", action="store_true", 
                        help="Fetch manufacturer data for pending cards")
     parser.add_argument("--fetch-logistics", action="store_true", 
                        help="Fetch logistics data for undelivered packages")
     parser.add_argument("--track-sheet", action="store_true", 
-                       help="Generate track_sheet.json summary")
+                       help="Generate track_sheet.json summary and save to database")
+    parser.add_argument("--track-sheet-file-only", action="store_true", 
+                       help="Generate track_sheet.json file only (don't save to database)")
     
     # Utility arguments
     parser.add_argument("--analytics", action="store_true", help="Show analytics dashboard")
@@ -430,24 +812,23 @@ def main():
         # Initialize enhanced system
         system = EnhancedCardTrackingSystem(debug=args.debug)
 
-        # Handle fetch operations
+        # Handle enhanced fetch operations
         if args.fetch_bank:
-            success = system.fetch_bank_applications()
+            success = system.fetch_bank_applications(include_existing=True)
             system.processor.print_analytics()
             sys.exit(0 if success else 1)
         
-        if args.fetch_manufacturer:
-            success = system.fetch_manufacturer_data()
-            system.processor.print_analytics()
-            sys.exit(0 if success else 1)
-        
-        if args.fetch_logistics:
-            success = system.fetch_logistics_data()
+        if args.fetch_bank_new_only:
+            success = system.fetch_bank_applications(include_existing=False)
             system.processor.print_analytics()
             sys.exit(0 if success else 1)
         
         if args.track_sheet:
-            success = system.generate_track_sheet()
+            success = system.generate_track_sheet(save_to_db=True)
+            sys.exit(0 if success else 1)
+        
+        if args.track_sheet_file_only:
+            success = system.generate_track_sheet(save_to_db=False)
             sys.exit(0 if success else 1)
 
         # Analytics mode
@@ -467,10 +848,7 @@ def main():
         print("\n⚠️ Operation interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Fatal error: {e}")
-        if args.debug:
-            import traceback
-            traceback.print_exc()
+        print(f"Fatal error: {e}")
         sys.exit(1)
 
 
