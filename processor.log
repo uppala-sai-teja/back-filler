@@ -40,3 +40,6 @@
 2025-08-19 00:50:33,201 - INFO - Added event: PRODUCTION_QUEUED to CARD_APP_002_1755544524
 2025-08-19 00:50:33,201 - INFO - Added event: PRODUCTION_STARTED to CARD_APP_002_1755544524
 2025-08-19 00:50:33,202 - ERROR - Error saving local_db_state.json: [WinError 183] Cannot create a file when that file already exists: 'local_db_state.json' -> 'local_db_state.json.backup'
+2025-08-19 06:18:04,740 - WARNING - File not found: local_db_state.json
+2025-08-19 06:18:04,905 - INFO - Saved data to local_db_state.json
+2025-08-19 06:19:23,742 - INFO - Saved data to local_db_state.json

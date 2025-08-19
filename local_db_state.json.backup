@@ -1,25 +1,33 @@
 {
-  "CUST_789012": {
-    "_id": "CUST_789012",
+  "CUST_001": {
+    "_id": "CUST_001",
     "customer_info": {
       "name": "John Doe",
-      "mobile": "+919876543210"
+      "mobile": "+919876543210",
+      "email": "john@example.com"
     },
     "cards": [
       {
+        "card_id": "CARD_APP_001_1755584284",
         "tracking_ids": {
-          "application_id": "APP_HDFC_123456"
+          "application_id": "APP_001",
+          "customer_id": "CUST_001",
+          "manufacturer_order_id": null,
+          "logistics_tracking_number": null
         },
         "tracking_status": "active",
         "card_info": {
           "bank_name": "Bank",
-          "card_type": "Credit Card",
-          "card_variant": "Platinum"
+          "card_type": "credit_card",
+          "card_variant": "platinum",
+          "card_purpose": "new_application"
         },
         "current_status": {
-          "stage": "APPLICATION_APPROVED",
-          "location": null,
-          "last_updated": "2025-08-15T14:30:00Z"
+          "status": "APPLICATION_APPROVED",
+          "stage": "application_and_approval",
+          "location": "Unknown",
+          "last_updated": "2025-08-15T14:30:00Z",
+          "description": "Application approved by bank"
         },
         "timeline": {
           "application_and_approval": [
@@ -27,124 +35,105 @@
               "status": "APPLICATION_SUBMITTED",
               "stage": "application_and_approval",
               "timestamp": "2025-08-15T09:30:00Z",
-              "description": "Status updated to APPLICATION_SUBMITTED"
+              "description": "Application submitted successfully",
+              "location": "Unknown",
+              "provider": "Bank",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
             },
             {
               "status": "APPLICATION_APPROVED",
               "stage": "application_and_approval",
               "timestamp": "2025-08-15T14:30:00Z",
-              "description": "Status updated to APPLICATION_APPROVED"
+              "description": "Application approved by bank",
+              "location": "Unknown",
+              "provider": "Bank",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
             }
           ],
           "card_production": [],
           "shipping_and_delivery": []
-        }
-      },
-      {
-        "tracking_ids": {
-          "application_id": "APP_HDFC_123457"
         },
-        "tracking_status": "active",
-        "card_info": {
-          "bank_name": "Bank",
-          "card_type": "Credit Card",
-          "card_variant": "Platinum1"
-        },
-        "current_status": {
-          "stage": "APPLICATION_APPROVED",
-          "location": null,
-          "last_updated": "2025-08-15T14:30:00Z"
-        },
-        "timeline": {
-          "application_and_approval": [
-            {
-              "status": "APPLICATION_SUBMITTED",
-              "stage": "application_and_approval",
-              "timestamp": "2025-08-15T09:30:00Z",
-              "description": "Status updated to APPLICATION_SUBMITTED"
-            },
-            {
-              "status": "APPLICATION_APPROVED",
-              "stage": "application_and_approval",
-              "timestamp": "2025-08-15T14:30:00Z",
-              "description": "Status updated to APPLICATION_APPROVED"
-            }
-          ],
-          "card_production": [],
-          "shipping_and_delivery": []
+        "delivery_info": {},
+        "metadata": {
+          "created_at": "2025-08-19T06:18:04.800839Z",
+          "last_updated": "2025-08-19T06:18:04.854856Z",
+          "priority": "standard"
         }
       }
-    ]
+    ],
+    "metadata": {
+      "created_at": "2025-08-19T06:18:04.800833Z",
+      "last_updated": "2025-08-19T06:18:04.854856Z"
+    }
   },
-  "CUST_789013": {
-    "_id": "CUST_789013",
+  "CUST_002": {
+    "_id": "CUST_002",
     "customer_info": {
-      "name": "kkkkkk",
-      "mobile": "+919876543210"
+      "name": "Jane Smith",
+      "mobile": "+919876543211",
+      "email": "jane@example.com"
     },
     "cards": [
       {
+        "card_id": "CARD_APP_002_1755584284",
         "tracking_ids": {
-          "application_id": "APP_HDFC_123400"
+          "application_id": "APP_002",
+          "customer_id": "CUST_002",
+          "manufacturer_order_id": null,
+          "logistics_tracking_number": null
         },
         "tracking_status": "active",
         "card_info": {
           "bank_name": "Bank",
-          "card_type": "Credit Card",
-          "card_variant": "Platinum"
+          "card_type": "debit_card",
+          "card_variant": "gold",
+          "card_purpose": "new_application"
         },
         "current_status": {
-          "stage": "APPLICATION_APPROVED",
-          "location": null,
-          "last_updated": "2025-08-15T14:30:00Z"
+          "status": "APPLICATION_SUBMITTED",
+          "stage": "application_and_approval",
+          "location": "Unknown",
+          "last_updated": "2025-08-16T10:00:00Z",
+          "description": "Application submitted successfully"
         },
         "timeline": {
           "application_and_approval": [
             {
               "status": "APPLICATION_SUBMITTED",
               "stage": "application_and_approval",
-              "timestamp": "2025-08-15T09:30:00Z",
-              "description": "Status updated to APPLICATION_SUBMITTED"
-            },
-            {
-              "status": "APPLICATION_APPROVED",
-              "stage": "application_and_approval",
-              "timestamp": "2025-08-15T14:30:00Z",
-              "description": "Status updated to APPLICATION_APPROVED"
+              "timestamp": "2025-08-16T10:00:00Z",
+              "description": "Application submitted successfully",
+              "location": "Unknown",
+              "provider": "Bank",
+              "metadata": {
+                "courier_partner": null,
+                "tracking_number": null,
+                "batch_number": null
+              }
             }
           ],
           "card_production": [],
           "shipping_and_delivery": []
-        }
-      },
-      {
-        "tracking_ids": {
-          "application_id": "APP_HDFC_123401"
         },
-        "tracking_status": "active",
-        "card_info": {
-          "bank_name": "Bank",
-          "card_type": "Credit Card",
-          "card_variant": "Platinum1"
-        },
-        "current_status": {
-          "stage": "APPLICATION_APPROVED",
-          "location": null,
-          "last_updated": "2025-08-15T14:30:00Z"
-        },
-        "timeline": {
-          "application_and_approval": [
-            {
-              "status": "APPLICATION_APPROVED",
-              "stage": "application_and_approval",
-              "timestamp": "2025-08-15T14:30:00Z",
-              "description": "Status updated to APPLICATION_APPROVED"
-            }
-          ],
-          "card_production": [],
-          "shipping_and_delivery": []
+        "delivery_info": {},
+        "metadata": {
+          "created_at": "2025-08-19T06:18:04.904852Z",
+          "last_updated": "2025-08-19T06:18:04.904868Z",
+          "priority": "standard"
         }
       }
-    ]
+    ],
+    "metadata": {
+      "created_at": "2025-08-19T06:18:04.904843Z",
+      "last_updated": "2025-08-19T06:18:04.904868Z"
+    }
   }
 }
