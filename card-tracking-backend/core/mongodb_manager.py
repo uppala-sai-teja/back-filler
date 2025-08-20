@@ -1,4 +1,4 @@
-# core/mongodb_manager.py - Windows Unicode Fix
+# core/mongodb_manager.py - Corrected Version
 import os
 import logging
 from datetime import datetime
@@ -25,37 +25,6 @@ class MongoDBManager:
         self.notifications_collection = None
         self.track_sheets_collection = None  # New collection for track sheets
         
-    def save_track_sheet(self, track_sheet_data: Dict, sheet_type: str = "standard") -> bool:
-        """Save track sheet to database with enhanced metadata"""
-        try:
-            track_sheet_doc = {
-                "_id": f"track_sheet_{sheet_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                "sheet_type": sheet_type,
-                "generated_at": datetime.now().isoformat() + "Z",
-                "data": track_sheet_data,
-                "summary": {
-                    "total_applications": len(track_sheet_data),
-                    "stage_breakdown": self._calculate_stage_breakdown(track_sheet_data),
-                    "status_breakdown": self._calculate_status_breakdown(track_sheet_data)
-                }
-            }
-            
-            self.track_sheets_collection.insert_one(track_sheet_doc)
-            self.logger.info(f"Saved track sheet ({sheet_type}) with {len(track_sheet_data)} applications")
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Error saving track sheet: {e}")
-            return False
-    
-    def _calculate_status_breakdown(self, track_sheet_data: Dict) -> Dict:
-        """Calculate status breakdown for track sheet summary"""
-        status_breakdown = {}
-        for app_data in track_sheet_data.values():
-            status = app_data.get("current_status", "UNKNOWN")
-            status_breakdown[status] = status_breakdown.get(status, 0) + 1
-        return status_breakdown
-    
     def setup_logging(self, debug):
         level = logging.DEBUG if debug else logging.INFO
         self.logger = logging.getLogger('mongodb_manager')
@@ -107,7 +76,7 @@ class MongoDBManager:
             self.notifications_collection.create_index([("timestamp", -1)])
             
             # Track sheets collection indexes
-            self.track_sheets_collection.create_index("generated_at")
+            self.track_sheets_collection.create_index([("generated_at", -1)])
             self.track_sheets_collection.create_index("sheet_type")
             
             self.logger.info("Created MongoDB indexes")
@@ -121,7 +90,7 @@ class MongoDBManager:
             self.client.close()
             self.logger.info("Disconnected from MongoDB")
 
-    # Customer Operations (existing methods remain the same)
+    # Customer Operations
     def get_customer(self, customer_id: str) -> Optional[Dict]:
         """Get customer by ID"""
         try:
@@ -187,21 +156,22 @@ class MongoDBManager:
 
     # Track Sheet Operations
     def save_track_sheet(self, track_sheet_data: Dict, sheet_type: str = "standard") -> bool:
-        """Save track sheet to database"""
+        """Save track sheet to database with enhanced metadata"""
         try:
             track_sheet_doc = {
-                "_id": f"track_sheet_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "_id": f"track_sheet_{sheet_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                 "sheet_type": sheet_type,
                 "generated_at": datetime.now().isoformat() + "Z",
                 "data": track_sheet_data,
                 "summary": {
                     "total_applications": len(track_sheet_data),
-                    "stage_breakdown": self._calculate_stage_breakdown(track_sheet_data)
+                    "stage_breakdown": self._calculate_stage_breakdown(track_sheet_data),
+                    "status_breakdown": self._calculate_status_breakdown(track_sheet_data)
                 }
             }
             
             self.track_sheets_collection.insert_one(track_sheet_doc)
-            self.logger.info(f"Saved track sheet with {len(track_sheet_data)} applications")
+            self.logger.info(f"Saved track sheet ({sheet_type}) with {len(track_sheet_data)} applications")
             return True
             
         except Exception as e:
@@ -226,8 +196,16 @@ class MongoDBManager:
             stage = app_data.get("current_stage", "unknown")
             stage_breakdown[stage] = stage_breakdown.get(stage, 0) + 1
         return stage_breakdown
+    
+    def _calculate_status_breakdown(self, track_sheet_data: Dict) -> Dict:
+        """Calculate status breakdown for track sheet summary"""
+        status_breakdown = {}
+        for app_data in track_sheet_data.values():
+            status = app_data.get("current_status", "UNKNOWN")
+            status_breakdown[status] = status_breakdown.get(status, 0) + 1
+        return status_breakdown
 
-    # Analytics Operations (existing methods with Windows-safe logging)
+    # Analytics Operations
     def get_status_summary(self) -> Dict:
         """Get summary of all card statuses"""
         try:
@@ -276,7 +254,7 @@ class MongoDBManager:
             self.logger.error(f"Error getting bank performance: {e}")
             return {}
 
-    # Notification Operations (existing methods remain the same)
+    # Notification Operations
     def save_notification(self, notification: Dict) -> bool:
         """Save notification to database"""
         try:

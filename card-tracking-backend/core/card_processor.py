@@ -1,4 +1,4 @@
-# core/card_processor.py - Updated with pending stages support
+# core/card_processor.py - Fixed version with debug attribute
 import json
 import logging
 import re
@@ -20,6 +20,7 @@ REQUIRED_FIELDS = {
 
 class CardTrackingProcessor:
     def __init__(self, debug=False):
+        self.debug = debug  # Add this missing attribute
         self.setup_logging(debug)
         self.stats = {"processed": 0, "errors": 0, "skipped": 0, "notifications_sent": 0}
         
@@ -217,6 +218,9 @@ class CardTrackingProcessor:
                     
         except Exception as e:
             self.logger.error(f"Error processing data: {e}")
+            if self.debug:
+                import traceback
+                self.logger.error(traceback.format_exc())
             self.stats["errors"] += 1
 
     # MongoDB Operations
@@ -427,43 +431,15 @@ class CardTrackingProcessor:
                         
             except Exception as e:
                 self.logger.error(f"Error in record: {e}")
+                if self.debug:
+                    import traceback
+                    self.logger.error(traceback.format_exc())
                 self.stats["errors"] += 1
                 continue
         
         return True
 
-    # Utility Methods for Enhanced Features
-    def get_cards_without_manufacturer_order_id(self) -> List[str]:
-        """Get application IDs for cards that need manufacturer updates"""
-        application_ids = []
-        customers = list(self.db_manager.customers_collection.find())
-        
-        for customer in customers:
-            for card in customer.get("cards", []):
-                tracking_ids = card.get("tracking_ids", {})
-                if (tracking_ids.get("application_id") and 
-                    not tracking_ids.get("manufacturer_order_id")):
-                    application_ids.append(tracking_ids["application_id"])
-        
-        return application_ids
-    
-    def get_tracking_numbers_for_active_shipments(self) -> List[str]:
-        """Get tracking numbers for cards that are not yet delivered"""
-        tracking_numbers = []
-        customers = list(self.db_manager.customers_collection.find())
-        
-        for customer in customers:
-            for card in customer.get("cards", []):
-                current_status = card.get("current_status", {}).get("status")
-                tracking_number = card.get("tracking_ids", {}).get("logistics_tracking_number")
-                
-                if (tracking_number and 
-                    current_status not in ["DELIVERED", "RETURNED_TO_SENDER"]):
-                    tracking_numbers.append(tracking_number)
-        
-        return tracking_numbers
-
-    # Analytics and Reporting
+    # Analytics and Reporting (rest of the methods remain the same)
     def print_stats(self):
         """Print processing statistics"""
         print(f"\n📊 Processing Stats:")
@@ -555,39 +531,3 @@ class CardTrackingProcessor:
             for bank, perf in bank_performance.items():
                 completion_rate = (perf["completed"] / perf["total"] * 100) if perf["total"] > 0 else 0
                 print(f"  {bank}: {perf['completed']}/{perf['total']} ({completion_rate:.1f}%)")
-
-    def show_notifications(self):
-        """Show pending notifications"""
-        notifications = self.db_manager.get_pending_notifications(20)
-        print(f"\n📱 {len(notifications)} pending notifications:")
-        for notif in notifications:
-            print(f"  {notif.get('customer_name', 'Unknown')}: {notif.get('status')} - {notif.get('description')}")
-    
-    def show_pending_stages_summary(self):
-        """Show detailed pending stages analysis"""
-        print(f"\n⏳ Detailed Pending Stages Analysis:")
-        
-        customers = list(self.db_manager.customers_collection.find())
-        stage_details = {stage: [] for stage in STAGE_ORDER}
-        
-        for customer in customers:
-            for card in customer.get("cards", []):
-                pending_stages = card.get("pending_stages", [])
-                application_id = card.get("tracking_ids", {}).get("application_id", "Unknown")
-                customer_name = customer.get("customer_info", {}).get("name", "Unknown")
-                
-                for pending_stage in pending_stages:
-                    if pending_stage in stage_details:
-                        stage_details[pending_stage].append({
-                            "application_id": application_id,
-                            "customer": customer_name,
-                            "current_status": card.get("current_status", {}).get("status", "Unknown")
-                        })
-        
-        for stage, cards in stage_details.items():
-            if cards:
-                print(f"\n  {stage} ({len(cards)} cards pending):")
-                for card_info in cards[:5]:  # Show first 5
-                    print(f"    - {card_info['application_id']} ({card_info['customer']}) - {card_info['current_status']}")
-                if len(cards) > 5:
-                    print(f"    ... and {len(cards) - 5} more")

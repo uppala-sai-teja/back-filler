@@ -1,0 +1,51 @@
+{
+  "APP_001": {
+    "customer": "John Doe",
+    "current_stage": "shipping_and_delivery",
+    "current_status": "DELIVERED",
+    "pending_stages": [],
+    "last_updated": "2025-08-18T14:45:00Z",
+    "card_type": "credit_card",
+    "card_variant": "platinum",
+    "estimated_delivery": "2025-08-25T22:35:30.095952Z",
+    "tracking_ids": {
+      "application_id": "APP_001",
+      "customer_id": "CUST_001",
+      "manufacturer_order_id": null,
+      "logistics_tracking_number": "DTDC123456789"
+    },
+    "application_metadata": {
+      "courier_partner": null,
+      "current_tracking_number": null,
+      "production_batch": null,
+      "facility_location": null,
+      "priority": "standard"
+    }
+  },
+  "APP_002": {
+    "customer": "Jane Smith",
+    "current_stage": "application_and_approval",
+    "current_status": "APPLICATION_SUBMITTED",
+    "pending_stages": [
+      "card_production",
+      "shipping_and_delivery"
+    ],
+    "last_updated": "2025-08-16T10:00:00Z",
+    "card_type": "debit_card",
+    "card_variant": "gold",
+    "estimated_delivery": null,
+    "tracking_ids": {
+      "application_id": "APP_002",
+      "customer_id": "CUST_002",
+      "manufacturer_order_id": null,
+      "logistics_tracking_number": null
+    },
+    "application_metadata": {
+      "courier_partner": null,
+      "current_tracking_number": null,
+      "production_batch": null,
+      "facility_location": null,
+      "priority": "standard"
+    }
+  }
+}
